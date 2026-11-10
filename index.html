@@ -46,7 +46,7 @@
   }
   #grid {
     flex: 1; min-height: 0; display: grid; gap: 12px;
-    grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr);
+    grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(2, 1fr);
   }
   .tile {
     background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
@@ -120,13 +120,14 @@
     #home h1 { font-size: 17px; }
     #hand { font-size: 13px; padding: 4px 14px; min-height: 34px; }
     #grid { gap: 8px; }
-    .tile { border-radius: 14px; border-left-width: 6px; padding: 6px 12px; min-height: 0; }
-    .tile b { font-size: 18px; }
-    .tile span { font-size: 12px; margin-top: 3px; }
+    .tile { border-radius: 14px; border-left-width: 6px; padding: 6px 8px; min-height: 0; }
+    .tile b { font-size: 16px; }
+    .tile span { font-size: 11px; margin-top: 3px; }
     #unit { padding-top: 6px; padding-bottom: 72px; }
     #uHead { margin-bottom: 6px; column-gap: 14px; }
     #uHead h2 { font-size: 17px; border-left-width: 5px; padding-left: 8px; }
     .legend { font-size: 11px; }
+    #uHead .sub { display: none; }
     #zoom button { min-width: 44px; height: 30px; font-size: 14px; }
     #sections { gap: 8px; }
     .card { padding: 8px 10px; border-radius: 10px; }
@@ -170,7 +171,7 @@
 /* 標記：⟦…⟧ = 關鍵語法（黃底） ⟨…⟩ = 可替換的值（藍字） 註解自動變灰 */
 const UNITS = [
 {
-  id: 'animation', title: 'Animation', sub: 'setInterval / 改樣式 / transition', color: '#ff7a90',
+  id: 'animation', title: 'Animation', sub: 'setInterval / clearInterval / random', color: '#ff7a90',
   sections: [
     { h: '動畫骨架：開始 / 停止', code: `
 var ⟨animationSchedule⟩;        // 全域變數，停止時要用
@@ -240,41 +241,173 @@ function showClock() {
   document.getElementById("clock").innerHTML = clock;
 }
 clockAnimation = setInterval(showClock, 1000);`, notes: [] },
-    { h: '用 JS 改內容 / 改樣式', code: `
-var e = document.getElementById("⟨the-id⟩");
+  ]
+},
+{
+  id: 'cssjs', title: 'CSS with JS', sub: 'style / Transition / Transform', color: '#e88bd9',
+  sections: [
+    { h: '用 JS 改樣式：三步驟', code: `
+// Step 1：給要改的元素一個 ID
+<span ⟦id⟧="⟨hello⟩">Hello world</span>
 
-e.⟦innerHTML⟧ = "…";       // span, div, p …
-e.⟦value⟧     = "…";       // input 文字欄
-e.⟦src⟧       = "a.png";   // img
+// Step 2：取得元素
+var e = document.⟦getElementById(⟧"⟨hello⟩"⟦)⟧;
 
-// 樣式：e.style.屬性 = "值"
+// Step 3：改樣式   e.style.[cssProperty] = "值"
 e.⟦style⟧.color = "pink";
-e.style.⟦fontSize⟧ = "25px";
-e.style.⟦backgroundColor⟧ = "yellow";
-e.style.opacity = 0.5;
+e.⟦style⟧.fontSize = "25px";
+e.⟦style⟧.fontStyle = "italic";`, notes: ['值一律是⟦字串⟧，單位（px）要自己寫'] },
+    { h: 'CSS 連字號 → JS 駝峰', code: `
+font-size            →  e.style.⟦fontSize⟧
+font-style           →  e.style.⟦fontStyle⟧
+background-color     →  e.style.⟦backgroundColor⟧
+border-bottom-style  →  e.style.⟦borderBottomStyle⟧
+border-left-color    →  e.style.⟦borderLeftColor⟧
+padding-right        →  e.style.⟦paddingRight⟧`, notes: ['去掉 ⟦-⟧，後面那個字的⟦第一個字母大寫⟧'] },
+    { h: '範例：依輸入改文字樣式', code: `
+<input type="text" id="colorInput" />
+<input type="text" id="fontSizeInput" />
+<button ⟦onClick⟧="changeStyle();">Change style</button>
+<span id="hello">Hello world</span>
 
-// CSS 連字號 → JS 駝峰
-font-size → ⟦fontSize⟧     border-left-color → ⟦borderLeftColor⟧`, notes: ['讀 input 的數字要轉型：⟦Number(⟧field.value⟦)⟧'] },
+function changeStyle() {
+  // get user input from text fields
+  var colorValue    = document.getElementById("colorInput")⟦.value⟧;
+  var fontSizeValue = document.getElementById("fontSizeInput")⟦.value⟧;
+
+  // change color and font size
+  var helloSpan = document.getElementById("hello");
+  helloSpan.⟦style.color⟧    = colorValue;
+  helloSpan.⟦style.fontSize⟧ = fontSizeValue;
+}`, notes: [] },
+    { h: '範例：圖片透明度 / 段落樣式', code: `
+// 數字要先轉型
+var opacityValue = ⟦Number(⟧opacityField.value⟦)⟧;
+image.style.⟦opacity⟧ = opacityValue;
+
+// 段落
+cityPar.style.⟦fontSize⟧        = fontSize;
+cityPar.style.⟦padding⟧         = padding;
+cityPar.style.⟦color⟧           = color;
+cityPar.style.⟦backgroundColor⟧ = bgColor;
+cityPar.style.⟦borderStyle⟧     = border;`, notes: [] },
     { h: 'CSS Transition', code: `
 .trans1 {
-  background-color: mediumblue;
-  ⟦transition-property⟧: ⟨background-color⟩;   /* 必填 */
-  ⟦transition-duration⟧: ⟨3s⟩;                 /* 必填 */
-  ⟦transition-timing-function⟧: ⟨ease-in-out⟩;
-  ⟦transition-delay⟧: ⟨1s⟩;
+  background-color: mediumblue;                /* 開始狀態 */
+  ⟦transition-property⟧: ⟨background-color⟩;     /* 必填：改哪個屬性 */
+  ⟦transition-duration⟧: ⟨3s⟩;                   /* 必填：多久 */
+  ⟦transition-timing-function⟧: ⟨ease-in-out⟩;   /* 加速方式 */
+  ⟦transition-delay⟧: ⟨1s⟩;                      /* 開始前停多久 */
 }
-.trans1⟦:hover⟧ { background-color: red; }     /* 結束狀態 */
+.trans1⟦:hover⟧ {
+  background-color: red;                       /* 結束狀態 */
+}`, notes: ['需要⟦開始狀態＋結束狀態⟧；結束狀態由 ⟦:hover⟧、⟦:focus⟧、⟦:active⟧ 觸發（又稱 tweening）'] },
+    { h: 'Transition 簡寫', code: `
+/* transition: property duration timing-function delay; */
+.trans2 {
+  background-color: green;
+  ⟦transition⟧: ⟨background-color⟩ ⟨3s⟩ ⟨ease-in-out⟩ ⟨1s⟩;
+}
+.trans2:hover, .trans2⟦:focus⟧ {
+  background-color: blue;
+}
 
-/* 簡寫：property duration timing-function delay */
-⟦transition⟧: ⟨background-color 3s ease-in-out 1s⟩;`, notes: [
-      '需要「開始狀態」＋「結束狀態」，由 ⟦:hover⟧、⟦:focus⟧、⟦:active⟧ 觸發',
-    ]},
+timing-function： ⟦ease⟧  ⟦linear⟧  ⟦ease-in⟧  ⟦ease-out⟧  ⟦ease-in-out⟧`, notes: [] },
     { h: 'CSS Transform', code: `
-#myDiv       { ⟦transform⟧: ⟦skew(⟧20deg⟦)⟧; }
-#myDiv:hover { transform: skew(20deg) ⟦scale(⟧1.5⟦)⟧; }   /* 可串接 */
-img:hover    { transform: ⟦rotate(⟧-50deg⟦)⟧; }
+#myDiv {
+  ⟦transform⟧: ⟦skew(⟧20deg⟦)⟧;              /* 一載入就是變形狀態 */
+}
+#myDiv⟦:hover⟧ {
+  transform: skew(20deg) ⟦scale(⟧1.5⟦)⟧;   /* 多個函式用空白串接 */
+}
+img:hover {
+  transform: ⟦rotate(⟧-50deg⟦)⟧;           /* 互動時才變形 */
+}
 
-2D 函式： ⟦rotate()⟧  ⟦translate()⟧  ⟦scale()⟧  ⟦skew()⟧`, notes: [] },
+2D 函式： ⟦rotate()⟧  ⟦translate()⟧  ⟦scale()⟧  ⟦skew()⟧`, notes: ['Transform 可以⟦旋轉、移動、縮放、傾斜⟧元素；角度單位是 ⟦deg⟧'] },
+  ]
+},
+{
+  id: 'events', title: 'JS Events', sub: 'onClick / onChange / confirm', color: '#9ad36a',
+  sections: [
+    { h: 'Event 骨架', code: `
+<button ⟦onClick⟧="⟨handlerFunction1()⟩">Click me</button>
+<span ⟦onMouseOver⟧="⟨handlerFunction2()⟩">some text</span>
+
+<script>
+function ⟨handlerFunction1⟩() {
+  alert("…");          // 事件發生時要做的事
+}
+<\/script>`, notes: ['在 HTML 元素上寫 ⟦on事件="函式()"⟧ 屬性；事件發生時函式被執行'] },
+    { h: '事件一覽', code: `
+⟦onClick⟧      點擊元素（button、img、checkbox、radio…）
+⟦onLoad⟧       資源⟦完全載入後⟧
+⟦onFocus⟧      元素取得焦點（進入欄位）
+⟦onBlur⟧       元素失去焦點（離開欄位）
+⟦onChange⟧     失去焦點⟦而且值有改變⟧
+⟦onSelect⟧     選取（反白）欄位裡的文字
+⟦onSubmit⟧     送出表單
+⟦onMouseDown⟧ / ⟦onMouseUp⟧     按下 / 放開滑鼠鍵
+⟦onMouseOver⟧ / ⟦onMouseOut⟧    滑鼠移入 / 移出`, notes: ['Focus / Blur / Change 用在 ⟦input⟧、⟦textarea⟧、⟦select⟧'] },
+    { h: 'onLoad', code: `
+<script>
+function greeting() {
+  alert("Welcome to my website!");
+}
+<\/script>
+
+<⟦body⟧ ⟦onLoad⟧="greeting()">`, notes: ['⟦<body>⟧：整頁內容（圖片、JS、CSS）都載完才觸發；⟦<img>⟧：圖片取回後觸發'] },
+    { h: 'onChange', code: `
+Enter discount code:
+<input type="text" ⟦id⟧="discountCode" ⟦onChange⟧="uppercase()">
+
+function uppercase() {
+  var discountField = document.getElementById("discountCode");
+  discountField⟦.value⟧ = discountField.value⟦.toUpperCase()⟧;
+}`, notes: ['進入欄位但⟦沒改內容⟧就離開、或下拉選了⟦同一個選項⟧ → 不會觸發'] },
+    { h: 'Mouse events', code: `
+<span id="demo" ⟦onMouseDown⟧="mouseDown()" ⟦onMouseUp⟧="mouseUp()">
+Mouse Events
+</span>
+
+function mouseDown() {
+  var demoSpan = document.getElementById("demo");
+  demoSpan.innerHTML = "Release Me";
+}
+function mouseUp() {
+  var demoSpan = document.getElementById("demo");
+  demoSpan.innerHTML = "Thank You";
+}
+
+<span id="demo" ⟦onMouseOver⟧="mouseOver()" ⟦onMouseOut⟧="mouseOut()">`, notes: [] },
+    { h: 'onSubmit（表單驗證）', code: `
+<form ⟦onSubmit⟧="⟦return⟧ validateForm()" action="..." method="...">
+  ...
+</form>
+
+function validateForm() {
+  if (... something wrong ...) {
+    ⟦return false⟧;     // 不送出
+  }
+  ⟦return true⟧;        // 送到 server
+}`, notes: [] },
+    { h: 'Confirm box', code: `
+var ok = ⟦confirm(⟧"Do you want to proceed?"⟦)⟧;
+
+if (ok) {
+  alert("User clicked OK");         // OK     → ⟦true⟧
+} else {
+  alert("User clicked Cancel.");    // Cancel → ⟦false⟧
+}`, notes: [] },
+    { h: 'Prompt box', code: `
+// prompt("sometext", "defaultText")
+var name = ⟦prompt(⟧"Please enter your name", "⟨cat in the hat⟩"⟦)⟧;
+
+if (name ⟦!= null⟧) {
+  alert("Hello " + name);           // OK     → ⟦輸入的值⟧
+} else {
+  alert("You clicked Cancel");      // Cancel → ⟦null⟧
+}`, notes: ['三種對話框：⟦alert⟧ 只顯示、⟦confirm⟧ 回傳 true/false、⟦prompt⟧ 回傳字串或 null'] },
   ]
 },
 {
@@ -942,7 +1075,7 @@ function show() {
   if (!inUnit) return;
   const u = UNITS[i];
   $('unit').style.setProperty('--c', u.color);
-  $('uTitle').innerHTML = u.title + '<small>' + u.sub + '　' + (i + 1) + ' / ' + UNITS.length + '</small>';
+  $('uTitle').innerHTML = u.title + '<small><span class="sub">' + u.sub + '　</span>' + (i + 1) + ' / ' + UNITS.length + '</small>';
   $('sections').innerHTML = u.sections.map(s =>
     '<section class="card"><h3>' + s.h + '</h3><pre>' + renderCode(s.code) + '</pre>' +
     (s.notes.length ? '<ul class="notes">' + s.notes.map(n => '<li>' + mark(esc(n)) + '</li>').join('') + '</ul>' : '') +
