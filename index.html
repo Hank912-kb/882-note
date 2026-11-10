@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Web 筆記</title>
+<style>
+  :root {
+    --bg: #14171c;
+    --panel: #1d2229;
+    --line: #2e3540;
+    --text: #e8ecf1;
+    --dim: #8b96a5;
+    --key-bg: #ffd84d;
+    --key-fg: #1a1400;
+    --val: #5fd7ff;
+    --cmt: #7c8a78;
+    --accent: #ffd84d;
+    --fs-code: clamp(18px, 2.1vw, 24px);
+    --fs-body: clamp(18px, 2vw, 22px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    font-size: var(--fs-body); line-height: 1.5;
+  }
+  button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+
+  /* ---------- 主頁 ---------- */
+  #home {
+    height: 100dvh; display: flex; flex-direction: column;
+    padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+             max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    gap: 12px;
+  }
+  #home header { display: flex; align-items: center; justify-content: space-between; }
+  #home h1 { margin: 0; font-size: clamp(20px, 2.6vw, 30px); letter-spacing: .04em; }
+  #hand {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+    padding: 8px 18px; font-size: 16px; color: var(--dim); min-height: 44px;
+  }
+  #grid {
+    flex: 1; min-height: 0; display: grid; gap: 12px;
+    grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr);
+  }
+  .tile {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    border-left: 8px solid var(--c);
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    padding: 10px 16px; text-align: left; min-height: 84px;
+    transition: transform .08s, background .08s;
+  }
+  .tile:active { transform: scale(.97); background: #262d36; }
+  .tile b { font-size: clamp(20px, 2.5vw, 32px); line-height: 1.2; }
+  .tile span { font-size: clamp(14px, 1.5vw, 18px); color: var(--dim); margin-top: 6px; }
+  #rotate { display: none; text-align: center; color: var(--dim); font-size: 15px; }
+
+  @media (orientation: portrait) {
+    #home { height: auto; min-height: 100dvh; }
+    #grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; grid-auto-rows: 110px; }
+    #rotate { display: block; }
+  }
+
+  /* ---------- 單元頁 ---------- */
+  #unit {
+    padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+             120px max(16px, env(safe-area-inset-left));
+  }
+  #unit > h2 {
+    margin: 0 0 12px; font-size: clamp(24px, 3vw, 36px);
+    border-left: 8px solid var(--c, var(--accent)); padding-left: 14px;
+  }
+  #unit > h2 small { font-size: .55em; color: var(--dim); font-weight: 400; margin-left: 12px; }
+  #sections { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); align-items: start; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; min-width: 0; }
+  .card h3 { margin: 0 0 8px; font-size: clamp(19px, 2.2vw, 25px); color: var(--accent); }
+  pre {
+    margin: 0; padding: 12px 14px; background: #0f1216; border-radius: 12px;
+    font: var(--fs-code)/1.55 "SF Mono", Menlo, Consolas, monospace;
+    overflow-x: auto; white-space: pre; tab-size: 2;
+  }
+  .k { background: var(--key-bg); color: var(--key-fg); border-radius: 5px; padding: 0 4px; font-weight: 700; }
+  .v { color: var(--val); font-weight: 700; }
+  .c { color: var(--cmt); }
+  .c .k { opacity: .9; }
+  ul.notes { margin: 10px 0 0; padding-left: 1.2em; }
+  ul.notes li { margin: 4px 0; }
+  ul.notes .k, ul.notes .v { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: .95em; }
+  .legend { color: var(--dim); font-size: 15px; margin: 0 0 12px; }
+
+  /* ---------- 浮動操作鈕（拇指區） ---------- */
+  #fab {
+    position: fixed; bottom: max(14px, env(safe-area-inset-bottom));
+    right: max(14px, env(safe-area-inset-right));
+    display: flex; gap: 10px; align-items: center; z-index: 10;
+  }
+  body.left #fab { right: auto; left: max(14px, env(safe-area-inset-left)); flex-direction: row-reverse; }
+  #fab button {
+    height: 64px; min-width: 64px; border-radius: 32px;
+    background: #2b333e; border: 1px solid #465060;
+    font-size: 26px; font-weight: 700; box-shadow: 0 6px 18px rgba(0,0,0,.5);
+  }
+  #fab #goHome { background: var(--accent); color: #1a1400; border-color: var(--accent); padding: 0 26px; font-size: 22px; }
+  #fab button:active { transform: scale(.94); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<main id="home">
+  <header>
+    <h1>Web 筆記 · 重點架構</h1>
+    <button id="hand" aria-label="切換慣用手"></button>
+  </header>
+  <div id="rotate">建議將裝置橫放使用</div>
+  <div id="grid"></div>
+</main>
+
+<main id="unit" hidden>
+  <h2 id="uTitle"></h2>
+  <p class="legend"><span class="k">黃底</span> 必背關鍵語法　<span class="v">藍字</span> 可替換的值／名稱　<span class="c">灰字</span> 註解</p>
+  <div id="sections"></div>
+</main>
+
+<nav id="fab" hidden>
+  <button id="prev" aria-label="上一單元">‹</button>
+  <button id="goHome">⌂ 主頁</button>
+  <button id="next" aria-label="下一單元">›</button>
+</nav>
+
+<script>
+/* 標記：⟦…⟧ = 關鍵語法（黃底） ⟨…⟩ = 可替換的值（藍字） 註解自動變灰 */
+const UNITS = [
+{
+  id: 'animation', title: 'Animation', sub: 'CSS 動畫 / transition', color: '#ff7a90',
+  sections: [
+    { h: '@keyframes + animation', code: `
+⟦@keyframes⟧ ⟨move⟩ {
+  ⟦from⟧ { left: 0;     opacity: 1; }
+  ⟦to⟧   { left: 300px; opacity: 0; }
+}
+/* 或用百分比 */
+@keyframes ⟨move⟩ {
+  ⟦0%⟧ {…}  ⟦50%⟧ {…}  ⟦100%⟧ {…}
+}
+
+.box {
+  position: relative;
+  ⟦animation-name⟧: ⟨move⟩;
+  ⟦animation-duration⟧: ⟨2s⟩;
+  ⟦animation-iteration-count⟧: ⟨infinite⟩;
+}`, notes: [
+      '名稱要對上：⟦@keyframes⟧ 的名字 = ⟦animation-name⟧',
+      '沒寫 ⟦animation-duration⟧ 預設 0s → 不會動',
+    ]},
+    { h: 'animation 屬性一覽', code: `
+animation-⟦delay⟧: 1s;             /* 延遲開始 */
+animation-⟦timing-function⟧: ⟨ease⟩; /* linear | ease-in | ease-out | ease-in-out */
+animation-⟦direction⟧: ⟨alternate⟩;  /* normal | reverse | alternate */
+animation-⟦fill-mode⟧: ⟨forwards⟩;   /* 停在最後一格 */
+animation-⟦play-state⟧: ⟨paused⟩;    /* running | paused */
+
+/* 簡寫：name duration timing delay count direction */
+⟦animation⟧: ⟨move 2s linear 1s infinite alternate⟩;`, notes: [] },
+    { h: 'transition（狀態改變時過渡）', code: `
+.btn {
+  width: 100px;
+  ⟦transition⟧: ⟨width⟩ ⟨0.5s⟩ ⟨ease⟩;  /* 屬性 時間 曲線 */
+}
+.btn⟦:hover⟧ { width: 200px; }
+
+/* 常搭配 transform */
+⟦transform⟧: ⟨translate(50px,0)⟩ ⟨rotate(45deg)⟩ ⟨scale(1.5)⟩;`, notes: [
+      '⟦transition⟧ 需要觸發（:hover、改 class）；⟦animation⟧ 可自動播放',
+    ]},
+    { h: 'JavaScript 動畫', code: `
+var x = 0;
+var timer = ⟦setInterval⟧(frame, ⟨10⟩);   // 每 10ms
+function frame() {
+  if (x >= 300) { ⟦clearInterval⟧(timer); }
+  else { x++; box.⟦style.left⟧ = x + ⟦"px"⟧; }
+}
+
+// 較順的寫法
+function step() {
+  x++; box.style.left = x + "px";
+  ⟦requestAnimationFrame⟧(step);
+}
+requestAnimationFrame(step);`, notes: ['記得加單位 ⟦"px"⟧，元素要 ⟦position⟧: relative / absolute'] },
+  ]
+},
+{
+  id: 'form', title: 'Form Validation', sub: '表單驗證', color: '#ffb347',
+  sections: [
+    { h: '表單骨架', code: `
+<form ⟦name⟧="⟨myForm⟩"
+      ⟦action⟧="⟨process.php⟩"
+      ⟦method⟧="⟨get⟩"
+      ⟦onsubmit⟧="⟦return⟧ ⟨validate()⟩">
+
+  <input type="text" ⟦name⟧="⟨fname⟩" ⟦id⟧="⟨fname⟩">
+  <span id="err"></span>
+
+  <input type="⟦submit⟧" value="Submit">
+</form>`, notes: [
+      '⟦onsubmit="return …"⟧ 的 ⟦return⟧ 不能少，否則 false 也會送出',
+      '⟦action⟧＝送去哪裡；⟦method⟧＝⟨get⟩（資料在網址）/ ⟨post⟩（資料在 body）',
+    ]},
+    { h: '驗證函式', code: `
+function ⟨validate⟩() {
+  var x = ⟦document.forms⟧["⟨myForm⟩"]["⟨fname⟩"]⟦.value⟧;
+  // 或 document.getElementById("fname").value
+
+  if (x ⟦== ""⟧) {
+    alert("Name must be filled out");
+    ⟦return false⟧;     // 擋下，不送出
+  }
+  if (⟦isNaN⟧(x) || x < 1 || x > 10) {
+    document.getElementById("err").⟦innerHTML⟧ = "1~10";
+    ⟦return false⟧;
+  }
+  ⟦return true⟧;        // 通過，送出
+}`, notes: ['⟦return false⟧ → 不送出；⟦return true⟧ → 送到 action'] },
+    { h: '正規表示式檢查', code: `
+var re = ⟦/^⟧⟨[A-Za-z0-9._]+@[A-Za-z0-9.]+\\.[a-z]{2,}⟩⟦$/⟧;
+if (!re⟦.test(⟧email⟦)⟧) { return false; }
+
+// ^ 開頭  $ 結尾  \\d 數字  \\w 英數底線  \\s 空白
+// +  1個以上   *  0個以上   ?  0或1個   {2,5} 次數
+// [abc] 其中之一   [^abc] 排除   (a|b) 或`, notes: [] },
+    { h: 'HTML5 內建驗證屬性', code: `
+<input type="text"   ⟦required⟧>
+<input type="⟦email⟧">
+<input type="⟦number⟧" ⟦min⟧="1" ⟦max⟧="10">
+<input type="text"   ⟦pattern⟧="⟨[A-Za-z]{3}⟩" title="三個字母">
+<input type="text"   ⟦maxlength⟧="10" ⟦placeholder⟧="…">
+
+// JS 檢查
+if (!input.⟦checkValidity()⟧) {
+  msg.innerHTML = input.⟦validationMessage⟧;
+}`, notes: ['<form ⟦novalidate⟧> 可關閉瀏覽器內建驗證'] },
+  ]
+},
+{
+  id: 'xsd', title: 'XSD', sub: 'XML Schema', color: '#c792ea',
+  sections: [
+    { h: 'Schema 骨架 (.xsd)', code: `
+<?xml version="1.0"?>
+<⟦xs:schema⟧ ⟦xmlns:xs⟧="⟦http://www.w3.org/2001/XMLSchema⟧">
+
+  <⟦xs:element⟧ name="⟨note⟩">
+    <⟦xs:complexType⟧>
+      <⟦xs:sequence⟧>
+        <xs:element ⟦name⟧="⟨to⟩"   ⟦type⟧="⟨xs:string⟩"/>
+        <xs:element name="⟨body⟩" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>`, notes: [
+      '有子元素或屬性 → ⟦complexType⟧；只有文字 → simple element',
+      '⟦xs:sequence⟧ 依序、⟦xs:all⟧ 不限順序、⟦xs:choice⟧ 擇一',
+    ]},
+    { h: 'XML 文件引用 XSD', code: `
+<?xml version="1.0"?>
+<⟨note⟩
+  ⟦xmlns:xsi⟧="⟦http://www.w3.org/2001/XMLSchema-instance⟧"
+  ⟦xsi:noNamespaceSchemaLocation⟧="⟨note.xsd⟩">
+  <to>Tove</to>
+  <body>Hi</body>
+</note>`, notes: ['有 namespace 時改用 ⟦xsi:schemaLocation⟧="⟨命名空間 檔案⟩"'] },
+    { h: '型別、次數、屬性', code: `
+<!-- 常用型別 -->
+⟦xs:string⟧  ⟦xs:integer⟧  ⟦xs:decimal⟧  ⟦xs:boolean⟧  ⟦xs:date⟧
+
+<!-- 出現次數（預設都是 1） -->
+<xs:element name="item" type="xs:string"
+            ⟦minOccurs⟧="⟨0⟩" ⟦maxOccurs⟧="⟨unbounded⟩"/>
+
+<!-- 預設值 / 固定值 -->
+<xs:element name="color" type="xs:string" ⟦default⟧="red"/>
+<xs:element name="color" type="xs:string" ⟦fixed⟧="red"/>
+
+<!-- 屬性：寫在 sequence 之後 -->
+<⟦xs:attribute⟧ name="⟨id⟩" type="xs:integer" ⟦use⟧="⟨required⟩"/>`, notes: ['⟦xs:attribute⟧ 要放在 complexType 內、⟦</xs:sequence>⟧ 的後面'] },
+    { h: 'Restriction（限制值）', code: `
+<xs:element name="⟨age⟩">
+  <⟦xs:simpleType⟧>
+    <⟦xs:restriction⟧ ⟦base⟧="⟨xs:integer⟩">
+      <⟦xs:minInclusive⟧ value="0"/>
+      <⟦xs:maxInclusive⟧ value="120"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:element>
+
+<!-- 其他 facet -->
+<⟦xs:enumeration⟧ value="⟨Audi⟩"/>     <!-- 列舉 -->
+<⟦xs:pattern⟧ value="⟨[a-z]{3}⟩"/>     <!-- 正規式 -->
+<⟦xs:length⟧ value="8"/>  <xs:⟦minLength⟧ …/>  <xs:⟦maxLength⟧ …/>`, notes: [] },
+  ]
+},
+{
+  id: 'json', title: 'JSON', sub: '語法 / parse / stringify', color: '#7fd67f',
+  sections: [
+    { h: 'JSON 語法', code: `
+⟦{⟧
+  ⟦"name"⟧: "John",          // key 一定要⟦雙引號⟧
+  "age": 30,                // number
+  "married": true,          // boolean
+  "car": null,              // null
+  "address": ⟦{⟧ "city": "Taipei" ⟦}⟧,        // object
+  "pets": ⟦[⟧ "dog", "cat" ⟦]⟧                // array
+⟦}⟧`, notes: [
+      '值的型別：string、number、object、array、boolean、null',
+      '不可以有：⟦函式⟧、⟦undefined⟧、⟦註解⟧、單引號、結尾逗號',
+    ]},
+    { h: '字串 ⇄ 物件', code: `
+// 字串 → JS 物件（收到資料時）
+var obj = ⟦JSON.parse(⟧text⟦)⟧;
+
+// JS 物件 → 字串（送出資料時）
+var text = ⟦JSON.stringify(⟧obj⟦)⟧;`, notes: ['伺服器傳來的一律是字串，要先 ⟦JSON.parse⟧ 才能用 . 取值'] },
+    { h: '取值與走訪', code: `
+obj⟦.⟧name            obj⟦["name"]⟧
+obj.address⟦.⟧city    obj.pets⟦[0]⟧
+
+// 走訪物件
+⟦for (var k in obj)⟧ { k → key   obj⟦[k]⟧ → value }
+
+// 走訪陣列
+for (var i = 0; i < obj.pets⟦.length⟧; i++) { obj.pets[i] }
+
+// 修改 / 刪除
+obj.age = 31;      ⟦delete⟧ obj.car;`, notes: [] },
+    { h: 'JSON 搭配 AJAX', code: `
+var xhr = new XMLHttpRequest();
+xhr.onreadystatechange = function () {
+  if (this.readyState == 4 && this.status == 200) {
+    var data = ⟦JSON.parse(this.responseText)⟧;
+    document.getElementById("demo").innerHTML = data.name;
+  }
+};
+xhr.open("GET", "⟨data.json⟩", true);
+xhr.send();`, notes: ['JSON vs XML：JSON 較短、可用陣列、直接 parse 成 JS 物件'] },
+  ]
+},
+{
+  id: 'xml', title: 'XML and DTD', sub: 'well-formed / valid', color: '#5fd7ff',
+  sections: [
+    { h: 'XML 骨架', code: `
+⟦<?xml version="1.0" encoding="UTF-8"?>⟧
+<⟨bookstore⟩>                         <!-- 唯一 root -->
+  <book ⟦category="web"⟧>             <!-- 屬性值要引號 -->
+    <title>Learning XML</title>
+    <price>39.95</price>
+  </book>
+</⟨bookstore⟩>`, notes: [
+      'Well-formed：⟦單一 root⟧、⟦標籤要關閉⟧、⟦大小寫一致⟧、⟦正確巢狀⟧、⟦屬性值加引號⟧',
+      '特殊字元：⟦&amp;lt;⟧ <　⟦&amp;gt;⟧ >　⟦&amp;amp;⟧ &　⟦&amp;quot;⟧ "　⟦&amp;apos;⟧ \'',
+      'Valid ＝ well-formed ＋ 符合 DTD / XSD',
+    ]},
+    { h: '內部 DTD', code: `
+<?xml version="1.0"?>
+⟦<!DOCTYPE⟧ ⟨note⟩ ⟦[⟧
+  ⟦<!ELEMENT⟧ note ⟨(to,from,body)⟩>
+  <!ELEMENT to   ⟦(#PCDATA)⟧>
+  <!ELEMENT from (#PCDATA)>
+  <!ELEMENT body (#PCDATA)>
+⟦]>⟧
+<note>
+  <to>Tove</to><from>Jani</from><body>Hi</body>
+</note>`, notes: ['⟦<!DOCTYPE⟧ 後面的名字 = root 元素名稱'] },
+    { h: '外部 DTD', code: `
+<?xml version="1.0"?>
+<!DOCTYPE ⟨note⟩ ⟦SYSTEM⟧ "⟨note.dtd⟩">
+<note> … </note>
+
+<!-- note.dtd 內容：只放宣告 -->
+<!ELEMENT note (to,from,body)>
+<!ELEMENT to (#PCDATA)>`, notes: [] },
+    { h: 'ELEMENT 規則', code: `
+<!ELEMENT br ⟦EMPTY⟧>             <!-- 空元素 -->
+<!ELEMENT x  ⟦ANY⟧>               <!-- 任意內容 -->
+<!ELEMENT p  ⟦(#PCDATA)⟧>         <!-- 文字 -->
+<!ELEMENT a  (b⟦,⟧c)>             <!-- 依序 b 然後 c -->
+<!ELEMENT a  (b⟦|⟧c)>             <!-- b 或 c -->
+
+<!-- 次數 -->
+b      剛好 1 次
+b⟦+⟧     1 次以上
+b⟦*⟧     0 次以上
+b⟦?⟧     0 或 1 次`, notes: [] },
+    { h: 'ATTLIST 與 ENTITY', code: `
+⟦<!ATTLIST⟧ ⟨元素⟩ ⟨屬性⟩ ⟨型別⟩ ⟨預設⟩>
+
+<!ATTLIST book id       ⟦ID⟧     ⟦#REQUIRED⟧>
+<!ATTLIST book lang     ⟦CDATA⟧  ⟦#IMPLIED⟧>    <!-- 可省略 -->
+<!ATTLIST book ver      CDATA  ⟦#FIXED⟧ "1.0">
+<!ATTLIST pay  type ⟦(cash|card)⟧ "cash">      <!-- 列舉+預設 -->
+
+⟦<!ENTITY⟧ ⟨writer⟩ "Donald Duck">
+<author>⟦&writer;⟧</author>`, notes: ['元素內文字用 ⟦#PCDATA⟧；屬性文字用 ⟦CDATA⟧'] },
+  ]
+},
+{
+  id: 'ajax', title: 'AJAX', sub: 'XMLHttpRequest / fetch', color: '#ff9e64',
+  sections: [
+    { h: 'GET 骨架（四步驟）', code: `
+function loadDoc() {
+  var xhr = ⟦new XMLHttpRequest()⟧;               // 1 建立
+
+  xhr.⟦onreadystatechange⟧ = function () {        // 2 回呼
+    if (this.⟦readyState == 4⟧ && this.⟦status == 200⟧) {
+      document.getElementById("demo").innerHTML =
+        this.⟦responseText⟧;
+    }
+  };
+
+  xhr.⟦open(⟧"⟨GET⟩", "⟨data.txt⟩", ⟨true⟩⟦)⟧;        // 3 設定
+  xhr.⟦send()⟧;                                   // 4 送出
+}`, notes: [
+      '⟦open(method, url, async)⟧：第三個參數 ⟨true⟩ = 非同步',
+      'AJAX = 不重新載入整頁，就能跟伺服器交換資料',
+    ]},
+    { h: 'readyState / status', code: `
+⟦readyState⟧
+  0  尚未 open        1  已 open
+  2  已 send          3  接收中
+  ⟦4  完成⟧
+
+⟦status⟧
+  ⟦200⟧  OK      403  Forbidden      ⟦404⟧  Not Found
+
+// 也可以用 onload（不用檢查 readyState）
+xhr.⟦onload⟧ = function () { this.responseText };`, notes: [] },
+    { h: 'POST', code: `
+xhr.open("⟦POST⟧", "⟨demo.php⟩", true);
+xhr.⟦setRequestHeader⟧("⟦Content-type⟧",
+    "⟦application/x-www-form-urlencoded⟧");
+xhr.send("⟨fname=Henry&lname=Ford⟩");
+
+// GET 帶參數：接在網址後
+xhr.open("GET", "demo.php⟦?⟧⟨q=abc⟩⟦&⟧⟨n=1⟩", true);`, notes: ['POST 的資料放 ⟦send(…)⟧ 裡，且要先 ⟦setRequestHeader⟧'] },
+    { h: '處理回傳：XML / JSON', code: `
+// XML
+var xml = this.⟦responseXML⟧;
+var x = xml.⟦getElementsByTagName⟧("⟨title⟩");
+x[0].⟦childNodes[0].nodeValue⟧      // 取文字
+x[0].⟦getAttribute⟧("⟨id⟩")          // 取屬性
+
+// JSON
+var obj = ⟦JSON.parse⟧(this.⟦responseText⟧);`, notes: [] },
+    { h: 'fetch 寫法', code: `
+⟦fetch⟧("⟨data.json⟩")
+  ⟦.then⟧(function (res) { return res⟦.json()⟧; })   // 或 .text()
+  .then(function (data) { console.log(data); })
+  ⟦.catch⟧(function (err) { console.log(err); });`, notes: [] },
+  ]
+},
+{
+  id: 'canvas', title: 'Canvas', sub: '繪圖 API', color: '#f78fb3',
+  sections: [
+    { h: '起手式', code: `
+<⟦canvas⟧ ⟦id⟧="⟨myCanvas⟩" ⟦width⟧="300" ⟦height⟧="150"></canvas>
+
+<script>
+var c   = document.getElementById("⟨myCanvas⟩");
+var ctx = c.⟦getContext("2d")⟧;
+<\/script>`, notes: [
+      '寬高寫在標籤屬性，不要用 CSS（會拉伸變形）',
+      '原點 (0,0) 在⟦左上角⟧，y 往下為正',
+    ]},
+    { h: '矩形 / 顏色', code: `
+ctx.⟦fillStyle⟧   = "⟨#FF0000⟩";
+ctx.⟦strokeStyle⟧ = "⟨blue⟩";
+ctx.⟦lineWidth⟧   = 5;
+
+ctx.⟦fillRect⟧(⟨x, y, w, h⟩);      // 實心
+ctx.⟦strokeRect⟧(x, y, w, h);    // 外框
+ctx.⟦clearRect⟧(x, y, w, h);     // 清除`, notes: ['先設 style，再畫'] },
+    { h: '路徑：線與圓', code: `
+ctx.⟦beginPath()⟧;
+ctx.⟦moveTo⟧(⟨0, 0⟩);          // 起點
+ctx.⟦lineTo⟧(⟨200, 100⟩);      // 連到
+ctx.⟦closePath()⟧;            // 接回起點（可省）
+ctx.⟦stroke()⟧;               // 描線   ← 沒呼叫不會出現
+ctx.⟦fill()⟧;                 // 填滿
+
+// 圓：arc(x, y, r, 起始角, 結束角)
+ctx.beginPath();
+ctx.⟦arc⟧(⟨95, 50, 40⟩, ⟦0, 2 * Math.PI⟧);
+ctx.stroke();`, notes: ['角度用弧度：整圓 = ⟦2 * Math.PI⟧'] },
+    { h: '文字 / 圖片 / 漸層', code: `
+ctx.⟦font⟧ = "⟨30px Arial⟩";
+ctx.⟦fillText⟧("⟨Hello⟩", ⟨x, y⟩);
+ctx.⟦strokeText⟧("Hello", x, y);
+
+var img = document.getElementById("pic");
+ctx.⟦drawImage⟧(img, ⟨x, y⟩);          // 可加 w, h
+
+var g = ctx.⟦createLinearGradient⟧(x0, y0, x1, y1);
+g.⟦addColorStop⟧(⟨0⟩, "red");
+g.addColorStop(⟨1⟩, "white");
+ctx.fillStyle = g;`, notes: ['圓形漸層：⟦createRadialGradient⟧(x0,y0,r0, x1,y1,r1)'] },
+    { h: 'Canvas 動畫', code: `
+function draw() {
+  ctx.⟦clearRect⟧(0, 0, c.⟦width⟧, c.⟦height⟧);   // 1 清畫面
+  ctx.fillRect(x, 50, 30, 30);              // 2 畫
+  x += 2;                                   // 3 更新位置
+  ⟦requestAnimationFrame⟧(draw);              // 4 下一格
+}
+draw();`, notes: [] },
+  ]
+},
+{
+  id: 'dnd', title: 'Drag and Drop', sub: '拖放', color: '#56d4c0',
+  sections: [
+    { h: 'HTML 骨架', code: `
+<!-- 被拖的東西 -->
+<img ⟦id⟧="⟨drag1⟩" src="a.png"
+     ⟦draggable="true"⟧
+     ⟦ondragstart⟧="⟨drag(event)⟩">
+
+<!-- 放置區 -->
+<div id="box"
+     ⟦ondragover⟧="⟨allowDrop(event)⟩"
+     ⟦ondrop⟧="⟨drop(event)⟩"></div>`, notes: [
+      '被拖元素：⟦draggable⟧ + ⟦ondragstart⟧，而且要有 ⟦id⟧',
+      '放置區：⟦ondragover⟧ + ⟦ondrop⟧',
+    ]},
+    { h: '三個函式', code: `
+function drag(ev) {                    // 記住被拖的是誰
+  ev.⟦dataTransfer.setData⟧("⟨text⟩", ev.⟦target.id⟧);
+}
+
+function allowDrop(ev) {               // 允許放下
+  ev.⟦preventDefault()⟧;
+}
+
+function drop(ev) {
+  ev.⟦preventDefault()⟧;
+  var id = ev.⟦dataTransfer.getData⟧("⟨text⟩");
+  ev.target.⟦appendChild⟧(document.getElementById(id));
+}`, notes: [
+      '⟦ondragover⟧ 一定要 ⟦preventDefault()⟧：元素預設不接受放置',
+      '⟦setData⟧ 與 ⟦getData⟧ 的格式字串要一致',
+    ]},
+    { h: '事件順序', code: `
+被拖元素： ⟦dragstart⟧ → drag → ⟦dragend⟧
+放置區　： dragenter → ⟦dragover⟧ → dragleave / ⟦drop⟧`, notes: [] },
+  ]
+},
+{
+  id: 'dom', title: 'DOM', sub: '找 / 改 / 增刪 / 事件', color: '#82aaff',
+  sections: [
+    { h: '找元素', code: `
+document.⟦getElementById⟧("⟨id⟩")            // 單一元素
+document.⟦getElementsByTagName⟧("⟨p⟩")       // 集合 → 要 [i]
+document.⟦getElementsByClassName⟧("⟨cls⟩")   // 集合
+document.⟦querySelector⟧("⟨#id .cls⟩")       // 第一個符合
+document.⟦querySelectorAll⟧("⟨p.cls⟩")       // 全部符合`, notes: ['get⟦Elements⟧… 有 s → 回傳集合，要用 ⟦[0]⟧ 取出'] },
+    { h: '改內容 / 屬性 / 樣式', code: `
+el.⟦innerHTML⟧ = "⟨<b>new</b>⟩";       // 內容（含標籤）
+el.⟦textContent⟧ = "純文字";
+el.⟦value⟧                            // 表單欄位的值
+
+el.⟦src⟧ = "a.png";                   // 直接改屬性
+el.⟦setAttribute⟧("⟨href⟩", "⟨a.html⟩");
+el.⟦getAttribute⟧("href");
+
+el.⟦style⟧.⟨color⟩ = "red";
+el.style.⟦backgroundColor⟧ = "yellow";   // CSS 的 - 改駝峰
+el.⟦className⟧ = "active";   el.⟦classList.add⟧("active");`, notes: [] },
+    { h: '新增 / 刪除節點', code: `
+var p = document.⟦createElement⟧("⟨p⟩");
+var t = document.⟦createTextNode⟧("⟨Hello⟩");
+p.⟦appendChild⟧(t);
+parent.⟦appendChild⟧(p);              // 加在最後
+parent.⟦insertBefore⟧(p, ⟨child⟩);      // 插在 child 前
+
+parent.⟦removeChild⟧(child);
+parent.⟦replaceChild⟧(⟨新⟩, ⟨舊⟩);`, notes: ['三步驟：⟦create⟧ → 填內容 → ⟦append⟧ 到父節點'] },
+    { h: '事件', code: `
+<button ⟦onclick⟧="⟨myFunc()⟩">Click</button>
+
+el.⟦onclick⟧ = function () { … };
+el.⟦addEventListener⟧("⟨click⟩", ⟨myFunc⟩);    // 沒有 on、沒有 ()
+el.removeEventListener("click", myFunc);
+
+常用：onclick  onload  onchange  onmouseover  onmouseout
+      onkeydown  onfocus  onblur  onsubmit`, notes: [] },
+    { h: '節點關係', code: `
+el.⟦parentNode⟧
+el.⟦childNodes⟧        // 含文字節點     el.⟦children⟧  // 只有元素
+el.⟦firstChild⟧   el.⟦lastChild⟧
+el.⟦nextSibling⟧  el.⟦previousSibling⟧
+
+node.⟦nodeName⟧   node.⟦nodeValue⟧   node.⟦nodeType⟧  // 1 元素  3 文字
+
+// 取元素內文字
+el.⟦childNodes[0].nodeValue⟧   ≈   el.innerHTML`, notes: ['文字本身也是一個節點（text node）'] },
+  ]
+},
+{
+  id: 'css', title: 'CSS Selectors', sub: '選擇器', color: '#ffd84d',
+  sections: [
+    { h: '基本', code: `
+⟦*⟧            全部
+⟦p⟧            元素
+⟦.⟧⟨cls⟩         class="cls"
+⟦#⟧⟨id⟩          id="id"
+p⟦.⟧cls        有 cls 的 <p>（中間⟦沒有空白⟧）
+h1⟦,⟧ p        h1 和 p（群組）`, notes: [] },
+    { h: '組合 (Combinators)', code: `
+div⟦ ⟧p        div 裡⟦所有⟧後代 p     （空白）
+div ⟦>⟧ p      div 的⟦直接子⟧元素 p
+div ⟦+⟧ p      ⟦緊接在⟧ div 後的那個 p
+div ⟦~⟧ p      div 後面⟦所有同層⟧的 p`, notes: [] },
+    { h: '屬性', code: `
+⟦[⟧target⟦]⟧               有 target 屬性
+[type⟦=⟧"text"]          等於
+[title⟦~=⟧"flower"]      含這個「單字」
+[href⟦^=⟧"https"]        開頭是
+[href⟦$=⟧".pdf"]         結尾是
+[href⟦*=⟧"w3"]           包含`, notes: [] },
+    { h: '偽類 (:)', code: `
+a⟦:link⟧  a⟦:visited⟧  a⟦:hover⟧  a⟦:active⟧      /* 順序 LVHA */
+input⟦:focus⟧   input⟦:checked⟧   input⟦:disabled⟧
+
+p⟦:first-child⟧     p⟦:last-child⟧
+p⟦:nth-child(⟧⟨2⟩⟦)⟧    ⟨odd⟩ / ⟨even⟩ / ⟨3n+1⟩
+p⟦:first-of-type⟧   p⟦:nth-of-type(⟧2⟦)⟧
+⟦:not(⟧p⟦)⟧`, notes: ['⟦:nth-child⟧ 算所有兄弟；⟦:nth-of-type⟧ 只算同標籤'] },
+    { h: '偽元素 (::)', code: `
+p⟦::first-line⟧      p⟦::first-letter⟧
+p⟦::before⟧ { ⟦content⟧: "★"; }
+p⟦::after⟧  { ⟦content⟧: "";  }
+⟦::selection⟧`, notes: ['⟦::before / ::after⟧ 一定要有 ⟦content⟧'] },
+    { h: '優先權 (Specificity)', code: `
+⟦!important⟧  >  ⟦inline style⟧  >  ⟦#id⟧  >  ⟦.class⟧  >  ⟦元素⟧
+                  1000          100      10         1
+
+#nav .item a   →  100 + 10 + 1 = ⟨111⟩
+.class、[attr]、:hover  都算 ⟨10⟩
+分數相同 → ⟦後寫的⟧贏`, notes: [] },
+  ]
+},
+];
+
+/* ---------- 渲染 ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function mark(s) {
+  return s.replace(/⟦([\s\S]*?)⟧/g, '<span class="k">$1</span>')
+          .replace(/⟨([\s\S]*?)⟩/g, '<span class="v">$1</span>');
+}
+function renderCode(src) {
+  let s = esc(src.replace(/^\n/, ''));
+  s = s.replace(/&lt;!--(?! |$)|&lt;!--[\s\S]*?--&gt;/g, m => m.endsWith('--&gt;') ? '<span class="c">' + m + '</span>' : m)
+       .replace(/\/\*[\s\S]*?\*\//g, m => '<span class="c">' + m + '</span>')
+       .replace(/(^|\s)(\/\/.*)$/gm, (m, a, b) => a + '<span class="c">' + b + '</span>');
+  return mark(s);
+}
+
+$('grid').innerHTML = UNITS.map(u =>
+  '<button class="tile" style="--c:' + u.color + '" data-id="' + u.id + '"><b>' + u.title + '</b><span>' + u.sub + '</span></button>'
+).join('');
+$('grid').addEventListener('click', e => {
+  const t = e.target.closest('.tile');
+  if (t) location.hash = t.dataset.id;
+});
+
+function show() {
+  const id = location.hash.slice(1);
+  const i = UNITS.findIndex(u => u.id === id);
+  const inUnit = i >= 0;
+  $('home').hidden = inUnit;
+  $('unit').hidden = !inUnit;
+  $('fab').hidden = !inUnit;
+  if (!inUnit) return;
+  const u = UNITS[i];
+  $('unit').style.setProperty('--c', u.color);
+  $('uTitle').innerHTML = u.title + '<small>' + u.sub + '　' + (i + 1) + ' / ' + UNITS.length + '</small>';
+  $('sections').innerHTML = u.sections.map(s =>
+    '<section class="card"><h3>' + s.h + '</h3><pre>' + renderCode(s.code) + '</pre>' +
+    (s.notes.length ? '<ul class="notes">' + s.notes.map(n => '<li>' + mark(esc(n)) + '</li>').join('') + '</ul>' : '') +
+    '</section>'
+  ).join('');
+  $('prev').onclick = () => location.hash = UNITS[(i - 1 + UNITS.length) % UNITS.length].id;
+  $('next').onclick = () => location.hash = UNITS[(i + 1) % UNITS.length].id;
+  window.scrollTo(0, 0);
+}
+$('goHome').onclick = () => { location.hash = ''; };
+window.addEventListener('hashchange', show);
+
+/* 慣用手切換：決定浮動按鈕在左或右 */
+function setHand(left) {
+  document.body.classList.toggle('left', left);
+  $('hand').textContent = left ? '🖐 左手模式' : '右手模式 🖐';
+  try { localStorage.setItem('hand', left ? 'L' : 'R'); } catch (e) {}
+}
+$('hand').onclick = () => setHand(!document.body.classList.contains('left'));
+let saved = 'R';
+try { saved = localStorage.getItem('hand') || 'R'; } catch (e) {}
+setHand(saved === 'L');
+show();
+</script>
+</body>
+</html>
