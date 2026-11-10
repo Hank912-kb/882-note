@@ -107,6 +107,29 @@
   #fab #goHome { background: var(--accent); color: #1a1400; border-color: var(--accent); padding: 0 26px; font-size: 22px; }
   #fab button:active { transform: scale(.94); }
   [hidden] { display: none !important; }
+  /* ---------- 手機橫式（iPhone 16：852×393） ---------- */
+  @media (orientation: landscape) and (max-height: 500px) {
+    :root { --fs-code: 14px; --fs-body: 14px; }
+    #home { gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+    #home h1 { font-size: 17px; }
+    #hand { font-size: 13px; padding: 4px 14px; min-height: 34px; }
+    #grid { gap: 8px; }
+    .tile { border-radius: 14px; border-left-width: 6px; padding: 6px 12px; min-height: 0; }
+    .tile b { font-size: 18px; }
+    .tile span { font-size: 12px; margin-top: 3px; }
+    #unit { padding-top: 8px; padding-bottom: 84px; }
+    #unit > h2 { font-size: 20px; margin-bottom: 6px; border-left-width: 6px; padding-left: 10px; }
+    .legend { font-size: 12px; margin-bottom: 8px; }
+    #sections { gap: 10px; }
+    .card { padding: 10px 12px; border-radius: 12px; }
+    .card h3 { font-size: 16px; margin-bottom: 6px; }
+    pre { padding: 8px 10px; line-height: 1.45; border-radius: 10px; }
+    ul.notes { margin-top: 6px; }
+    #fab { gap: 8px; }
+    #fab button { height: 48px; min-width: 48px; border-radius: 24px; font-size: 22px; }
+    #fab #goHome { padding: 0 18px; font-size: 17px; }
+  }
+
 </style>
 </head>
 <body>
@@ -154,7 +177,6 @@ function stopAnimation() {
 <button ⟦onClick⟧="startAnimation()">Start</button>
 <button onClick="stopAnimation()">Stop</button>`, notes: [
       '⟦setInterval⟧ 第一個參數是⟦函式名稱，不加 ()⟧',
-      '排程變數要宣告在函式⟦外面⟧，stop 才拿得到',
     ]},
     { h: 'Counter：每秒 +1', code: `
 var ⟨counter⟩ = 0;
@@ -235,7 +257,6 @@ font-size → ⟦fontSize⟧     border-left-color → ⟦borderLeftColor⟧`, n
 /* 簡寫：property duration timing-function delay */
 ⟦transition⟧: ⟨background-color 3s ease-in-out 1s⟩;`, notes: [
       '需要「開始狀態」＋「結束狀態」，由 ⟦:hover⟧、⟦:focus⟧、⟦:active⟧ 觸發',
-      'timing：ease、linear、ease-in、ease-out、ease-in-out',
     ]},
     { h: 'CSS Transform', code: `
 #myDiv       { ⟦transform⟧: ⟦skew(⟧20deg⟦)⟧; }
@@ -264,7 +285,6 @@ function ⟨validateForm⟩() {
 }
 <\/script>`, notes: [
       '⟦onSubmit="return …"⟧ 的 ⟦return⟧ 不能少',
-      '函式回傳 ⟦false⟧ → 表單⟦不會⟧送出',
     ]},
     { h: '必填檢查 + 錯誤訊息', code: `
 <input type="text" ⟦id⟧="⟨email⟩" name="email">
@@ -281,7 +301,6 @@ function validateForm() {
   return true;
 }`, notes: [
       '⟦trim()⟧ 去掉字串兩側空白 → 擋掉只輸入空白的情況',
-      '也可以用 ⟦alert("…")⟧ 顯示訊息',
     ]},
     { h: '修正：通過時清掉舊訊息', code: `
 if (email == null || email.trim() == "") {
@@ -326,8 +345,6 @@ if (answer ⟦== null⟧ || answer ⟦!=⟧ correctAnswer) {
   input⟦:focus:invalid⟧ { box-shadow: none; }
 </style>`, notes: [
       '屬性：⟦required⟧、⟦minlength/maxlength⟧、⟦min/max⟧、⟦type⟧、⟦pattern⟧',
-      'CSS 偽類：⟦:disabled⟧ ⟦:invalid⟧ ⟦:optional⟧ ⟦:required⟧ ⟦:valid⟧',
-      '內建驗證效能好，但不如 JavaScript 可自訂',
     ]},
   ]
 },
@@ -433,7 +450,6 @@ if (answer ⟦== null⟧ || answer ⟦!=⟧ correctAnswer) {
   </xsd:complexType>
 </xsd:element>`, notes: [
       '作法：從 ⟦root⟧ 開始，一層一層判斷 simple / complex',
-      '⟦minOccurs="0" maxOccurs="unbounded"⟧ ＝ DTD 的 ⟦*⟧',
     ]},
   ]
 },
@@ -463,7 +479,6 @@ info⟦.⟧year           info⟦["year"]⟧`, notes: ['加入陣列：⟦arr.pu
   ⟦]⟧
 ⟦}⟧`, notes: [
       '資料是 ⟦name/value⟧ 配對，用⟦逗號⟧分隔',
-      '⟦{ }⟧ 裝物件、⟦[ ]⟧ 裝陣列',
     ]},
     { h: '物件 ⇄ JSON 字串', code: `
 // JS 物件 → JSON 字串
@@ -492,7 +507,6 @@ JSON.stringify(studentObj, ⟦["studentNumber", "csMajor"]⟧)
 
 JSON.stringify(studentObj, ["studentNumber", "csMajor"], 2)`, notes: [
       '⟦replacer⟧：挑選要輸出的屬性；null 或省略 = 全部',
-      '⟦space⟧：縮排空白數，方便閱讀',
     ]},
     { h: '組物件再轉 JSON', code: `
 var studentObj = ⟦{}⟧;                   // 空物件
@@ -522,9 +536,7 @@ console.log(studentJSON);`, notes: [] },
 </⟨studentList⟩>
 
 <?xml version="⟨1.0⟩" encoding="⟨UTF-8⟩" standalone="⟨yes|no⟩" ?>`, notes: [
-      'XML 宣告必須在⟦第一行第一個位置⟧，前面不能有空行',
       '⟦一個 root⟧、⟦都要有結束標籤⟧、⟦大小寫有別⟧、⟦正確巢狀⟧、⟦屬性值加引號⟧（單雙皆可）',
-      'XML 標籤是⟦使用者自訂⟧；HTML 標籤是預先定義的',
     ]},
     { h: 'Entity / 註解 / 屬性 vs 元素', code: `
 ⟦&amp;lt;⟧   <        ⟦&amp;gt;⟧   >        ⟦&amp;amp;⟧  &
@@ -550,7 +562,6 @@ console.log(studentJSON);`, notes: [] },
   <email>jsmith@gmail.com</email>
 </student>`, notes: [
       '⟦<!DOCTYPE⟧ 後面的名字 ＝ root 元素',
-      '⟦#PCDATA⟧ ＝ parsed character data（文字）',
     ]},
     { h: 'External DTD', code: `
 <?xml version="1.0" ⟦standalone="no"⟧ ?>
@@ -600,7 +611,6 @@ Step 4  ⟦Display⟧ 物件到 HTML       innerHTML
 <button ⟦onClick⟧="makeAjaxQuery()">Get JSON</button>
 <div ⟦id⟧="display"></div>`, notes: [
       'AJAX = ⟦asynchronous⟧ JavaScript and XML（不一定用 XML，也可用 JSON）',
-      '可以⟦不重新載入頁面⟧就更新網頁、在背景收送資料',
     ]},
     { h: 'Step 1：發出請求', code: `
 function makeAjaxQuery() {
@@ -679,7 +689,6 @@ displayDiv.innerHTML = html;`, notes: ['字串用雙引號包，裡面的 HTML �
 // get the canvas's 2d context
 var canvas  = document.getElementById("⟨canvas⟩");
 var context = canvas.⟦getContext("2d")⟧;`, notes: [
-      '<canvas> 只是⟦容器⟧，一定要用 JavaScript 才能畫',
       '原點 ⟦(0,0) 在左上角⟧，x 向右、y 向下',
     ]},
     { h: '文字', code: `
@@ -723,12 +732,7 @@ context.strokeStyle = "blue";      // 可同時填滿 + 描邊
 context.lineWidth = "2";
 context.stroke();`, notes: [
       '順序：⟦beginPath → moveTo → lineTo… → closePath → 設 style → fill / stroke⟧',
-      '挖洞（字母 O）：先填外圈黑色，再用白色填內圈',
     ]},
-    { h: '補充（講義未列）', code: `
-context.fillRect(x, y, w, h);      context.strokeRect(x, y, w, h);
-context.arc(x, y, r, 0, 2 * Math.PI);        // 圓
-context.drawImage(img, x, y);`, notes: [] },
   ]
 },
 {
@@ -745,8 +749,6 @@ context.drawImage(img, x, y);`, notes: [] },
 
 <span id="message"></span>`, notes: [
       'Draggable：⟦draggable="true"⟧ ＋ ⟦onDragStart⟧',
-      'Droppable：⟦onDrop⟧ ＋ ⟦onDragOver⟧',
-      '兩邊都要有 ⟦id⟧，函式都要傳 ⟦event⟧',
     ]},
     { h: 'dragStart：記住拖的是誰', code: `
 function dragStart(⟦event⟧) {
@@ -773,7 +775,6 @@ function drop(event) {
   messageSpan.innerHTML = dragId + " " + dropId;
 }`, notes: [
       '⟦setData⟧ 與 ⟦getData⟧ 的 key（⟨"dragId"⟩）要一樣',
-      'dragStart 的 target ＝ 被拖的；drop 的 target ＝ 被放上去的',
     ]},
   ]
 },
@@ -788,8 +789,6 @@ Document
       ├─ <h1> ── Text: "Hello World"
       └─ <p>  ── Text: "Wollongong"`, notes: [
       'DOM 把網頁結構表示成記憶體中的一棵⟦樹⟧',
-      '可用 JavaScript 透過 DOM 改網頁的⟦結構、樣式、內容⟧',
-      '⟦document⟧ 物件代表整個網頁；⟦文字也是節點⟧ (Text node)',
     ]},
     { h: '選取元素', code: `
 document.⟦getElementById(⟧⟨id⟩⟦)⟧                // 一個元素
@@ -809,7 +808,6 @@ personUL.⟦appendChild(⟧li⟦)⟧;
 
 <ul id="personList"></ul>`, notes: [
       '⟦createElement → createTextNode → appendChild → appendChild⟧',
-      '插在某個子節點前：⟦element.insertBefore(⟧新節點, 既有子節點⟦)⟧',
     ]},
     { h: '刪除 / 取代 / 屬性', code: `
 ⟨parent⟩.⟦removeChild(⟧⟨element⟩⟦)⟧;
@@ -876,7 +874,6 @@ div ⟦>⟧ i             { color: red; }
 div⟦.⟧userInfo i      { … }
 div.bankInfo ⟦>⟧ i    { … }`, notes: [
       '⟦Descendant⟧：出現在 E 內容裡的任何一層',
-      '⟦Child⟧：⟦直接⟧巢狀在 E 裡（child 一定也是 descendant）',
     ]},
     { h: '判斷 descendant / child', code: `
 <div>
@@ -896,10 +893,6 @@ h1⟦:hover⟧  { … }      /* 滑鼠移到上面時 */
 /* 表單驗證 / transition 用到的 */
 input⟦:invalid⟧   input⟦:valid⟧   input⟦:focus⟧
 ⟦:required⟧   ⟦:optional⟧   ⟦:disabled⟧   ⟦:active⟧`, notes: [] },
-    { h: '補充（講義未列）', code: `
-E + F   緊接在 E 後的 F        E ~ F   E 之後同層的 F
-[type="text"]   屬性選擇器     p:first-child   p:nth-child(2)
-優先權： inline style > #id > .class > 元素`, notes: [] },
   ]
 },
 ];
