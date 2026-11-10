@@ -136,517 +136,770 @@
 /* 標記：⟦…⟧ = 關鍵語法（黃底） ⟨…⟩ = 可替換的值（藍字） 註解自動變灰 */
 const UNITS = [
 {
-  id: 'animation', title: 'Animation', sub: 'CSS 動畫 / transition', color: '#ff7a90',
+  id: 'animation', title: 'Animation', sub: 'setInterval / 改樣式 / transition', color: '#ff7a90',
   sections: [
-    { h: '@keyframes + animation', code: `
-⟦@keyframes⟧ ⟨move⟩ {
-  ⟦from⟧ { left: 0;     opacity: 1; }
-  ⟦to⟧   { left: 300px; opacity: 0; }
-}
-/* 或用百分比 */
-@keyframes ⟨move⟩ {
-  ⟦0%⟧ {…}  ⟦50%⟧ {…}  ⟦100%⟧ {…}
+    { h: '動畫骨架：開始 / 停止', code: `
+var ⟨animationSchedule⟩;        // 全域變數，停止時要用
+
+// 開始：指定 1.做什麼(函式)  2.多久一次(毫秒)
+function startAnimation() {
+  ⟨animationSchedule⟩ = ⟦setInterval(⟧⟨animationFunction⟩, ⟨1000⟩⟦)⟧;
 }
 
-.box {
-  position: relative;
-  ⟦animation-name⟧: ⟨move⟩;
-  ⟦animation-duration⟧: ⟨2s⟩;
-  ⟦animation-iteration-count⟧: ⟨infinite⟩;
-}`, notes: [
-      '名稱要對上：⟦@keyframes⟧ 的名字 = ⟦animation-name⟧',
-      '沒寫 ⟦animation-duration⟧ 預設 0s → 不會動',
+// 停止
+function stopAnimation() {
+  ⟦clearInterval(⟧⟨animationSchedule⟩⟦)⟧;
+}
+
+<button ⟦onClick⟧="startAnimation()">Start</button>
+<button onClick="stopAnimation()">Stop</button>`, notes: [
+      '⟦setInterval⟧ 第一個參數是⟦函式名稱，不加 ()⟧',
+      '排程變數要宣告在函式⟦外面⟧，stop 才拿得到',
     ]},
-    { h: 'animation 屬性一覽', code: `
-animation-⟦delay⟧: 1s;             /* 延遲開始 */
-animation-⟦timing-function⟧: ⟨ease⟩; /* linear | ease-in | ease-out | ease-in-out */
-animation-⟦direction⟧: ⟨alternate⟩;  /* normal | reverse | alternate */
-animation-⟦fill-mode⟧: ⟨forwards⟩;   /* 停在最後一格 */
-animation-⟦play-state⟧: ⟨paused⟩;    /* running | paused */
+    { h: 'Counter：每秒 +1', code: `
+var ⟨counter⟩ = 0;
+var counterSchedule;
 
-/* 簡寫：name duration timing delay count direction */
-⟦animation⟧: ⟨move 2s linear 1s infinite alternate⟩;`, notes: [] },
-    { h: 'transition（狀態改變時過渡）', code: `
-.btn {
-  width: 100px;
-  ⟦transition⟧: ⟨width⟩ ⟨0.5s⟩ ⟨ease⟩;  /* 屬性 時間 曲線 */
+function startCounterAnimation() {
+  counterSchedule = ⟦setInterval⟧(⟨showCounter⟩, 1000);
 }
-.btn⟦:hover⟧ { width: 200px; }
 
-/* 常搭配 transform */
-⟦transform⟧: ⟨translate(50px,0)⟩ ⟨rotate(45deg)⟩ ⟨scale(1.5)⟩;`, notes: [
-      '⟦transition⟧ 需要觸發（:hover、改 class）；⟦animation⟧ 可自動播放',
+function ⟨showCounter⟩() {
+  counter = counter ⟦+ 1⟧;                       // 更新
+  var counterSpan = document.⟦getElementById⟧("counter");
+  counterSpan.⟦innerHTML⟧ = counter;             // 顯示
+}
+
+<span ⟦id⟧="counter"></span>`, notes: [] },
+    { h: 'Dice：跑 N 次後自動停', code: `
+var rollDiceSchedule;
+var ⟨rollDiceCounter⟩;
+
+function rollDiceAnimation() {
+  ⟨rollDiceCounter⟩ ⟦= 0⟧;                         // 先歸零
+  rollDiceSchedule = setInterval(rollDice, ⟨100⟩);
+}
+
+function rollDice() {
+  var diceValue = ⟦Math.floor(Math.random() * ⟧⟨6⟩⟦) + 1⟧;
+  var imageFile = "dice" + diceValue + ".png";
+  document.getElementById("dice").⟦src⟧ = imageFile;
+
+  rollDiceCounter = rollDiceCounter + 1;
+  ⟦if (rollDiceCounter == ⟧⟨10⟩⟦)⟧ {
+    ⟦clearInterval⟧(rollDiceSchedule);            // 到次數就停
+  }
+}`, notes: ['用 ⟦counter 變數⟧ 判斷何時停止動畫'] },
+    { h: 'Random 公式', code: `
+⟦Math.random()⟧                          // 小數 0 ≤ x < 1
+Math.random() * 10                     // 小數 0 ~ 10
+⟦Math.floor(⟧Math.random() * 10⟦)⟧         // 整數 0 ~ 9
+Math.floor(Math.random() * 10) ⟦+ 1⟧     // 整數 1 ~ 10
+
+// 陣列隨機挑一個（Slideshow）
+var index = Math.floor(Math.random() * ⟨image_list⟩⟦.length⟧);
+imgElement.src = image_list⟦[index]⟧;`, notes: ['整數 1~N：⟦Math.floor(Math.random() * N) + 1⟧'] },
+    { h: 'Clock：顯示現在時間', code: `
+function showClock() {
+  var now = ⟦new Date()⟧;
+  var clock = now.⟦getHours()⟧ + ":" + now.⟦getMinutes()⟧
+            + ":" + now.⟦getSeconds()⟧;
+  document.getElementById("clock").innerHTML = clock;
+}
+clockAnimation = setInterval(showClock, 1000);`, notes: [] },
+    { h: '用 JS 改內容 / 改樣式', code: `
+var e = document.getElementById("⟨the-id⟩");
+
+e.⟦innerHTML⟧ = "…";       // span, div, p …
+e.⟦value⟧     = "…";       // input 文字欄
+e.⟦src⟧       = "a.png";   // img
+
+// 樣式：e.style.屬性 = "值"
+e.⟦style⟧.color = "pink";
+e.style.⟦fontSize⟧ = "25px";
+e.style.⟦backgroundColor⟧ = "yellow";
+e.style.opacity = 0.5;
+
+// CSS 連字號 → JS 駝峰
+font-size → ⟦fontSize⟧     border-left-color → ⟦borderLeftColor⟧`, notes: ['讀 input 的數字要轉型：⟦Number(⟧field.value⟦)⟧'] },
+    { h: 'CSS Transition', code: `
+.trans1 {
+  background-color: mediumblue;
+  ⟦transition-property⟧: ⟨background-color⟩;   /* 必填 */
+  ⟦transition-duration⟧: ⟨3s⟩;                 /* 必填 */
+  ⟦transition-timing-function⟧: ⟨ease-in-out⟩;
+  ⟦transition-delay⟧: ⟨1s⟩;
+}
+.trans1⟦:hover⟧ { background-color: red; }     /* 結束狀態 */
+
+/* 簡寫：property duration timing-function delay */
+⟦transition⟧: ⟨background-color 3s ease-in-out 1s⟩;`, notes: [
+      '需要「開始狀態」＋「結束狀態」，由 ⟦:hover⟧、⟦:focus⟧、⟦:active⟧ 觸發',
+      'timing：ease、linear、ease-in、ease-out、ease-in-out',
     ]},
-    { h: 'JavaScript 動畫', code: `
-var x = 0;
-var timer = ⟦setInterval⟧(frame, ⟨10⟩);   // 每 10ms
-function frame() {
-  if (x >= 300) { ⟦clearInterval⟧(timer); }
-  else { x++; box.⟦style.left⟧ = x + ⟦"px"⟧; }
-}
+    { h: 'CSS Transform', code: `
+#myDiv       { ⟦transform⟧: ⟦skew(⟧20deg⟦)⟧; }
+#myDiv:hover { transform: skew(20deg) ⟦scale(⟧1.5⟦)⟧; }   /* 可串接 */
+img:hover    { transform: ⟦rotate(⟧-50deg⟦)⟧; }
 
-// 較順的寫法
-function step() {
-  x++; box.style.left = x + "px";
-  ⟦requestAnimationFrame⟧(step);
-}
-requestAnimationFrame(step);`, notes: ['記得加單位 ⟦"px"⟧，元素要 ⟦position⟧: relative / absolute'] },
+2D 函式： ⟦rotate()⟧  ⟦translate()⟧  ⟦scale()⟧  ⟦skew()⟧`, notes: [] },
   ]
 },
 {
   id: 'form', title: 'Form Validation', sub: '表單驗證', color: '#ffb347',
   sections: [
-    { h: '表單骨架', code: `
-<form ⟦name⟧="⟨myForm⟩"
-      ⟦action⟧="⟨process.php⟩"
-      ⟦method⟧="⟨get⟩"
-      ⟦onsubmit⟧="⟦return⟧ ⟨validate()⟩">
-
-  <input type="text" ⟦name⟧="⟨fname⟩" ⟦id⟧="⟨fname⟩">
-  <span id="err"></span>
-
+    { h: '骨架', code: `
+<form ⟦action⟧="⟨myService⟩" ⟦method⟧="⟨get⟩"
+      ⟦onSubmit⟧="⟦return⟧ ⟨validateForm()⟩">
+  ... your form goes here ...
   <input type="⟦submit⟧" value="Submit">
-</form>`, notes: [
-      '⟦onsubmit="return …"⟧ 的 ⟦return⟧ 不能少，否則 false 也會送出',
-      '⟦action⟧＝送去哪裡；⟦method⟧＝⟨get⟩（資料在網址）/ ⟨post⟩（資料在 body）',
-    ]},
-    { h: '驗證函式', code: `
-function ⟨validate⟩() {
-  var x = ⟦document.forms⟧["⟨myForm⟩"]["⟨fname⟩"]⟦.value⟧;
-  // 或 document.getElementById("fname").value
-
-  if (x ⟦== ""⟧) {
-    alert("Name must be filled out");
-    ⟦return false⟧;     // 擋下，不送出
-  }
-  if (⟦isNaN⟧(x) || x < 1 || x > 10) {
-    document.getElementById("err").⟦innerHTML⟧ = "1~10";
-    ⟦return false⟧;
-  }
-  ⟦return true⟧;        // 通過，送出
-}`, notes: ['⟦return false⟧ → 不送出；⟦return true⟧ → 送到 action'] },
-    { h: '正規表示式檢查', code: `
-var re = ⟦/^⟧⟨[A-Za-z0-9._]+@[A-Za-z0-9.]+\\.[a-z]{2,}⟩⟦$/⟧;
-if (!re⟦.test(⟧email⟦)⟧) { return false; }
-
-// ^ 開頭  $ 結尾  \\d 數字  \\w 英數底線  \\s 空白
-// +  1個以上   *  0個以上   ?  0或1個   {2,5} 次數
-// [abc] 其中之一   [^abc] 排除   (a|b) 或`, notes: [] },
-    { h: 'HTML5 內建驗證屬性', code: `
-<input type="text"   ⟦required⟧>
-<input type="⟦email⟧">
-<input type="⟦number⟧" ⟦min⟧="1" ⟦max⟧="10">
-<input type="text"   ⟦pattern⟧="⟨[A-Za-z]{3}⟩" title="三個字母">
-<input type="text"   ⟦maxlength⟧="10" ⟦placeholder⟧="…">
-
-// JS 檢查
-if (!input.⟦checkValidity()⟧) {
-  msg.innerHTML = input.⟦validationMessage⟧;
-}`, notes: ['<form ⟦novalidate⟧> 可關閉瀏覽器內建驗證'] },
-  ]
-},
-{
-  id: 'xsd', title: 'XSD', sub: 'XML Schema', color: '#c792ea',
-  sections: [
-    { h: 'Schema 骨架 (.xsd)', code: `
-<?xml version="1.0"?>
-<⟦xs:schema⟧ ⟦xmlns:xs⟧="⟦http://www.w3.org/2001/XMLSchema⟧">
-
-  <⟦xs:element⟧ name="⟨note⟩">
-    <⟦xs:complexType⟧>
-      <⟦xs:sequence⟧>
-        <xs:element ⟦name⟧="⟨to⟩"   ⟦type⟧="⟨xs:string⟩"/>
-        <xs:element name="⟨body⟩" type="xs:string"/>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-
-</xs:schema>`, notes: [
-      '有子元素或屬性 → ⟦complexType⟧；只有文字 → simple element',
-      '⟦xs:sequence⟧ 依序、⟦xs:all⟧ 不限順序、⟦xs:choice⟧ 擇一',
-    ]},
-    { h: 'XML 文件引用 XSD', code: `
-<?xml version="1.0"?>
-<⟨note⟩
-  ⟦xmlns:xsi⟧="⟦http://www.w3.org/2001/XMLSchema-instance⟧"
-  ⟦xsi:noNamespaceSchemaLocation⟧="⟨note.xsd⟩">
-  <to>Tove</to>
-  <body>Hi</body>
-</note>`, notes: ['有 namespace 時改用 ⟦xsi:schemaLocation⟧="⟨命名空間 檔案⟩"'] },
-    { h: '型別、次數、屬性', code: `
-<!-- 常用型別 -->
-⟦xs:string⟧  ⟦xs:integer⟧  ⟦xs:decimal⟧  ⟦xs:boolean⟧  ⟦xs:date⟧
-
-<!-- 出現次數（預設都是 1） -->
-<xs:element name="item" type="xs:string"
-            ⟦minOccurs⟧="⟨0⟩" ⟦maxOccurs⟧="⟨unbounded⟩"/>
-
-<!-- 預設值 / 固定值 -->
-<xs:element name="color" type="xs:string" ⟦default⟧="red"/>
-<xs:element name="color" type="xs:string" ⟦fixed⟧="red"/>
-
-<!-- 屬性：寫在 sequence 之後 -->
-<⟦xs:attribute⟧ name="⟨id⟩" type="xs:integer" ⟦use⟧="⟨required⟩"/>`, notes: ['⟦xs:attribute⟧ 要放在 complexType 內、⟦</xs:sequence>⟧ 的後面'] },
-    { h: 'Restriction（限制值）', code: `
-<xs:element name="⟨age⟩">
-  <⟦xs:simpleType⟧>
-    <⟦xs:restriction⟧ ⟦base⟧="⟨xs:integer⟩">
-      <⟦xs:minInclusive⟧ value="0"/>
-      <⟦xs:maxInclusive⟧ value="120"/>
-    </xs:restriction>
-  </xs:simpleType>
-</xs:element>
-
-<!-- 其他 facet -->
-<⟦xs:enumeration⟧ value="⟨Audi⟩"/>     <!-- 列舉 -->
-<⟦xs:pattern⟧ value="⟨[a-z]{3}⟩"/>     <!-- 正規式 -->
-<⟦xs:length⟧ value="8"/>  <xs:⟦minLength⟧ …/>  <xs:⟦maxLength⟧ …/>`, notes: [] },
-  ]
-},
-{
-  id: 'json', title: 'JSON', sub: '語法 / parse / stringify', color: '#7fd67f',
-  sections: [
-    { h: 'JSON 語法', code: `
-⟦{⟧
-  ⟦"name"⟧: "John",          // key 一定要⟦雙引號⟧
-  "age": 30,                // number
-  "married": true,          // boolean
-  "car": null,              // null
-  "address": ⟦{⟧ "city": "Taipei" ⟦}⟧,        // object
-  "pets": ⟦[⟧ "dog", "cat" ⟦]⟧                // array
-⟦}⟧`, notes: [
-      '值的型別：string、number、object、array、boolean、null',
-      '不可以有：⟦函式⟧、⟦undefined⟧、⟦註解⟧、單引號、結尾逗號',
-    ]},
-    { h: '字串 ⇄ 物件', code: `
-// 字串 → JS 物件（收到資料時）
-var obj = ⟦JSON.parse(⟧text⟦)⟧;
-
-// JS 物件 → 字串（送出資料時）
-var text = ⟦JSON.stringify(⟧obj⟦)⟧;`, notes: ['伺服器傳來的一律是字串，要先 ⟦JSON.parse⟧ 才能用 . 取值'] },
-    { h: '取值與走訪', code: `
-obj⟦.⟧name            obj⟦["name"]⟧
-obj.address⟦.⟧city    obj.pets⟦[0]⟧
-
-// 走訪物件
-⟦for (var k in obj)⟧ { k → key   obj⟦[k]⟧ → value }
-
-// 走訪陣列
-for (var i = 0; i < obj.pets⟦.length⟧; i++) { obj.pets[i] }
-
-// 修改 / 刪除
-obj.age = 31;      ⟦delete⟧ obj.car;`, notes: [] },
-    { h: 'JSON 搭配 AJAX', code: `
-var xhr = new XMLHttpRequest();
-xhr.onreadystatechange = function () {
-  if (this.readyState == 4 && this.status == 200) {
-    var data = ⟦JSON.parse(this.responseText)⟧;
-    document.getElementById("demo").innerHTML = data.name;
-  }
-};
-xhr.open("GET", "⟨data.json⟩", true);
-xhr.send();`, notes: ['JSON vs XML：JSON 較短、可用陣列、直接 parse 成 JS 物件'] },
-  ]
-},
-{
-  id: 'xml', title: 'XML and DTD', sub: 'well-formed / valid', color: '#5fd7ff',
-  sections: [
-    { h: 'XML 骨架', code: `
-⟦<?xml version="1.0" encoding="UTF-8"?>⟧
-<⟨bookstore⟩>                         <!-- 唯一 root -->
-  <book ⟦category="web"⟧>             <!-- 屬性值要引號 -->
-    <title>Learning XML</title>
-    <price>39.95</price>
-  </book>
-</⟨bookstore⟩>`, notes: [
-      'Well-formed：⟦單一 root⟧、⟦標籤要關閉⟧、⟦大小寫一致⟧、⟦正確巢狀⟧、⟦屬性值加引號⟧',
-      '特殊字元：⟦&amp;lt;⟧ <　⟦&amp;gt;⟧ >　⟦&amp;amp;⟧ &　⟦&amp;quot;⟧ "　⟦&amp;apos;⟧ \'',
-      'Valid ＝ well-formed ＋ 符合 DTD / XSD',
-    ]},
-    { h: '內部 DTD', code: `
-<?xml version="1.0"?>
-⟦<!DOCTYPE⟧ ⟨note⟩ ⟦[⟧
-  ⟦<!ELEMENT⟧ note ⟨(to,from,body)⟩>
-  <!ELEMENT to   ⟦(#PCDATA)⟧>
-  <!ELEMENT from (#PCDATA)>
-  <!ELEMENT body (#PCDATA)>
-⟦]>⟧
-<note>
-  <to>Tove</to><from>Jani</from><body>Hi</body>
-</note>`, notes: ['⟦<!DOCTYPE⟧ 後面的名字 = root 元素名稱'] },
-    { h: '外部 DTD', code: `
-<?xml version="1.0"?>
-<!DOCTYPE ⟨note⟩ ⟦SYSTEM⟧ "⟨note.dtd⟩">
-<note> … </note>
-
-<!-- note.dtd 內容：只放宣告 -->
-<!ELEMENT note (to,from,body)>
-<!ELEMENT to (#PCDATA)>`, notes: [] },
-    { h: 'ELEMENT 規則', code: `
-<!ELEMENT br ⟦EMPTY⟧>             <!-- 空元素 -->
-<!ELEMENT x  ⟦ANY⟧>               <!-- 任意內容 -->
-<!ELEMENT p  ⟦(#PCDATA)⟧>         <!-- 文字 -->
-<!ELEMENT a  (b⟦,⟧c)>             <!-- 依序 b 然後 c -->
-<!ELEMENT a  (b⟦|⟧c)>             <!-- b 或 c -->
-
-<!-- 次數 -->
-b      剛好 1 次
-b⟦+⟧     1 次以上
-b⟦*⟧     0 次以上
-b⟦?⟧     0 或 1 次`, notes: [] },
-    { h: 'ATTLIST 與 ENTITY', code: `
-⟦<!ATTLIST⟧ ⟨元素⟩ ⟨屬性⟩ ⟨型別⟩ ⟨預設⟩>
-
-<!ATTLIST book id       ⟦ID⟧     ⟦#REQUIRED⟧>
-<!ATTLIST book lang     ⟦CDATA⟧  ⟦#IMPLIED⟧>    <!-- 可省略 -->
-<!ATTLIST book ver      CDATA  ⟦#FIXED⟧ "1.0">
-<!ATTLIST pay  type ⟦(cash|card)⟧ "cash">      <!-- 列舉+預設 -->
-
-⟦<!ENTITY⟧ ⟨writer⟩ "Donald Duck">
-<author>⟦&writer;⟧</author>`, notes: ['元素內文字用 ⟦#PCDATA⟧；屬性文字用 ⟦CDATA⟧'] },
-  ]
-},
-{
-  id: 'ajax', title: 'AJAX', sub: 'XMLHttpRequest / fetch', color: '#ff9e64',
-  sections: [
-    { h: 'GET 骨架（四步驟）', code: `
-function loadDoc() {
-  var xhr = ⟦new XMLHttpRequest()⟧;               // 1 建立
-
-  xhr.⟦onreadystatechange⟧ = function () {        // 2 回呼
-    if (this.⟦readyState == 4⟧ && this.⟦status == 200⟧) {
-      document.getElementById("demo").innerHTML =
-        this.⟦responseText⟧;
-    }
-  };
-
-  xhr.⟦open(⟧"⟨GET⟩", "⟨data.txt⟩", ⟨true⟩⟦)⟧;        // 3 設定
-  xhr.⟦send()⟧;                                   // 4 送出
-}`, notes: [
-      '⟦open(method, url, async)⟧：第三個參數 ⟨true⟩ = 非同步',
-      'AJAX = 不重新載入整頁，就能跟伺服器交換資料',
-    ]},
-    { h: 'readyState / status', code: `
-⟦readyState⟧
-  0  尚未 open        1  已 open
-  2  已 send          3  接收中
-  ⟦4  完成⟧
-
-⟦status⟧
-  ⟦200⟧  OK      403  Forbidden      ⟦404⟧  Not Found
-
-// 也可以用 onload（不用檢查 readyState）
-xhr.⟦onload⟧ = function () { this.responseText };`, notes: [] },
-    { h: 'POST', code: `
-xhr.open("⟦POST⟧", "⟨demo.php⟩", true);
-xhr.⟦setRequestHeader⟧("⟦Content-type⟧",
-    "⟦application/x-www-form-urlencoded⟧");
-xhr.send("⟨fname=Henry&lname=Ford⟩");
-
-// GET 帶參數：接在網址後
-xhr.open("GET", "demo.php⟦?⟧⟨q=abc⟩⟦&⟧⟨n=1⟩", true);`, notes: ['POST 的資料放 ⟦send(…)⟧ 裡，且要先 ⟦setRequestHeader⟧'] },
-    { h: '處理回傳：XML / JSON', code: `
-// XML
-var xml = this.⟦responseXML⟧;
-var x = xml.⟦getElementsByTagName⟧("⟨title⟩");
-x[0].⟦childNodes[0].nodeValue⟧      // 取文字
-x[0].⟦getAttribute⟧("⟨id⟩")          // 取屬性
-
-// JSON
-var obj = ⟦JSON.parse⟧(this.⟦responseText⟧);`, notes: [] },
-    { h: 'fetch 寫法', code: `
-⟦fetch⟧("⟨data.json⟩")
-  ⟦.then⟧(function (res) { return res⟦.json()⟧; })   // 或 .text()
-  .then(function (data) { console.log(data); })
-  ⟦.catch⟧(function (err) { console.log(err); });`, notes: [] },
-  ]
-},
-{
-  id: 'canvas', title: 'Canvas', sub: '繪圖 API', color: '#f78fb3',
-  sections: [
-    { h: '起手式', code: `
-<⟦canvas⟧ ⟦id⟧="⟨myCanvas⟩" ⟦width⟧="300" ⟦height⟧="150"></canvas>
+</form>
 
 <script>
-var c   = document.getElementById("⟨myCanvas⟩");
-var ctx = c.⟦getContext("2d")⟧;
-<\/script>`, notes: [
-      '寬高寫在標籤屬性，不要用 CSS（會拉伸變形）',
-      '原點 (0,0) 在⟦左上角⟧，y 往下為正',
-    ]},
-    { h: '矩形 / 顏色', code: `
-ctx.⟦fillStyle⟧   = "⟨#FF0000⟩";
-ctx.⟦strokeStyle⟧ = "⟨blue⟩";
-ctx.⟦lineWidth⟧   = 5;
-
-ctx.⟦fillRect⟧(⟨x, y, w, h⟩);      // 實心
-ctx.⟦strokeRect⟧(x, y, w, h);    // 外框
-ctx.⟦clearRect⟧(x, y, w, h);     // 清除`, notes: ['先設 style，再畫'] },
-    { h: '路徑：線與圓', code: `
-ctx.⟦beginPath()⟧;
-ctx.⟦moveTo⟧(⟨0, 0⟩);          // 起點
-ctx.⟦lineTo⟧(⟨200, 100⟩);      // 連到
-ctx.⟦closePath()⟧;            // 接回起點（可省）
-ctx.⟦stroke()⟧;               // 描線   ← 沒呼叫不會出現
-ctx.⟦fill()⟧;                 // 填滿
-
-// 圓：arc(x, y, r, 起始角, 結束角)
-ctx.beginPath();
-ctx.⟦arc⟧(⟨95, 50, 40⟩, ⟦0, 2 * Math.PI⟧);
-ctx.stroke();`, notes: ['角度用弧度：整圓 = ⟦2 * Math.PI⟧'] },
-    { h: '文字 / 圖片 / 漸層', code: `
-ctx.⟦font⟧ = "⟨30px Arial⟩";
-ctx.⟦fillText⟧("⟨Hello⟩", ⟨x, y⟩);
-ctx.⟦strokeText⟧("Hello", x, y);
-
-var img = document.getElementById("pic");
-ctx.⟦drawImage⟧(img, ⟨x, y⟩);          // 可加 w, h
-
-var g = ctx.⟦createLinearGradient⟧(x0, y0, x1, y1);
-g.⟦addColorStop⟧(⟨0⟩, "red");
-g.addColorStop(⟨1⟩, "white");
-ctx.fillStyle = g;`, notes: ['圓形漸層：⟦createRadialGradient⟧(x0,y0,r0, x1,y1,r1)'] },
-    { h: 'Canvas 動畫', code: `
-function draw() {
-  ctx.⟦clearRect⟧(0, 0, c.⟦width⟧, c.⟦height⟧);   // 1 清畫面
-  ctx.fillRect(x, 50, 30, 30);              // 2 畫
-  x += 2;                                   // 3 更新位置
-  ⟦requestAnimationFrame⟧(draw);              // 4 下一格
+function ⟨validateForm⟩() {
+  if (... something wrong ...) {
+    ⟦return false⟧;      // 表單不會送出
+  }
+  ⟦return true⟧;
 }
-draw();`, notes: [] },
+<\/script>`, notes: [
+      '⟦onSubmit="return …"⟧ 的 ⟦return⟧ 不能少',
+      '函式回傳 ⟦false⟧ → 表單⟦不會⟧送出',
+    ]},
+    { h: '必填檢查 + 錯誤訊息', code: `
+<input type="text" ⟦id⟧="⟨email⟩" name="email">
+<span ⟦id⟧="⟨emailError⟩" style="color:red"></span>
+
+function validateForm() {
+  var email = document.⟦getElementById⟧("⟨email⟩")⟦.value⟧;
+
+  if (email ⟦== null⟧ || email⟦.trim() == ""⟧) {
+    document.getElementById("⟨emailError⟩").⟦innerHTML⟧ =
+        "Email must be filled out";
+    ⟦return false⟧;
+  }
+  return true;
+}`, notes: [
+      '⟦trim()⟧ 去掉字串兩側空白 → 擋掉只輸入空白的情況',
+      '也可以用 ⟦alert("…")⟧ 顯示訊息',
+    ]},
+    { h: '修正：通過時清掉舊訊息', code: `
+if (email == null || email.trim() == "") {
+  document.getElementById("emailError").innerHTML =
+      "Email must be filled out";
+  return false;
+} ⟦else⟧ {
+  document.getElementById("emailError").innerHTML ⟦= ""⟧;
+  document.getElementById("email")⟦.value = email.trim()⟧;
+}`, notes: ['不清的話，使用者修正後舊的紅字還會留著'] },
+    { h: '兩欄要相同（確認 email）', code: `
+var email  = document.getElementById("email").value;
+var email2 = document.getElementById("email2").value;
+
+if (email.trim() ⟦!=⟧ email2.trim()) {
+  document.getElementById("emailError2").innerHTML =
+      "Email does not match";
+  ⟦return false⟧;
+} else {
+  document.getElementById("emailError2").innerHTML = "";
+}
+⟦return true⟧;        // 全部檢查都過，最後才 true`, notes: [] },
+    { h: '確認是真人（隨機數學題）', code: `
+var x = Math.floor(Math.random() * 10) + 1;
+var y = Math.floor(Math.random() * 10) + 1;
+var correctAnswer = x + y;
+
+var answer = ⟦prompt(⟧"What is " + x + " + " + y + " ?"⟦)⟧;
+if (answer ⟦== null⟧ || answer ⟦!=⟧ correctAnswer) {
+  return false;
+}`, notes: [] },
+    { h: 'Built-in validation（HTML5）', code: `
+<input type="radio"  ⟦required⟧ name="chColour" value="black">
+<input type="⟦number⟧" ⟦min⟧="10" ⟦max⟧="99" ⟦step⟧="1">
+<input type="⟦email⟧"  ⟦required⟧ name="email">
+<textarea name="msg" ⟦maxlength⟧="50" rows="3"></textarea>
+<button>Submit</button>
+
+<style>
+  input⟦:invalid⟧       { box-shadow: 0 0 5px 1px red; }
+  input⟦:valid⟧         { box-shadow: 0 0 2px 1px green; }
+  input⟦:focus:invalid⟧ { box-shadow: none; }
+</style>`, notes: [
+      '屬性：⟦required⟧、⟦minlength/maxlength⟧、⟦min/max⟧、⟦type⟧、⟦pattern⟧',
+      'CSS 偽類：⟦:disabled⟧ ⟦:invalid⟧ ⟦:optional⟧ ⟦:required⟧ ⟦:valid⟧',
+      '內建驗證效能好，但不如 JavaScript 可自訂',
+    ]},
   ]
 },
 {
-  id: 'dnd', title: 'Drag and Drop', sub: '拖放', color: '#56d4c0',
+  id: 'xsd', title: 'XSD', sub: 'XML Schema Definition', color: '#c792ea',
+  sections: [
+    { h: 'XSD 檔骨架 (.xsd)', code: `
+<?xml version="1.0" ?>
+<⟦xsd:schema⟧ ⟦xmlns:xsd⟧="⟦http://www.w3.org/2001/XMLSchema⟧">
+
+  <⟦xsd:element⟧ ⟦name⟧="⟨student⟩">
+    <⟦xsd:complexType⟧>
+      <⟦xsd:sequence⟧>
+        <xsd:element name="⟨firstName⟩" ⟦type⟧="⟨xsd:string⟩"/>
+        <xsd:element name="⟨lastName⟩"  type="xsd:string"/>
+        <xsd:element name="⟨email⟩"     type="xsd:string"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>`, notes: [
+      '來自該 namespace 的元素與型別都要加前綴 ⟦xsd:⟧',
+    ]},
+    { h: 'XML 檔引用 XSD', code: `
+<?xml version="1.0" ?>
+<⟨student⟩ ⟦xmlns:xsi⟧="⟦http://www.w3.org/2001/XMLSchema-instance⟧"
+         ⟦xsi:schemaLocation⟧="⟨student.xsd⟩">
+  <firstName>John</firstName>
+  <lastName>Smith</lastName>
+  <email>jsmith@gmail.com</email>
+</student>`, notes: ['寫在 ⟦root 元素⟧ 的開始標籤上'] },
+    { h: 'simpleType 還是 complexType？', code: `
+含有⟦其他元素⟧              → ⟦complexType⟧
+含有⟦屬性⟧                  → ⟦complexType⟧
+沒有元素、也沒有屬性      → ⟦simpleType⟧
+
+<!-- simple：一行寫完 -->
+<xsd:element name="website"        type="⟦xsd:anyURI⟧" />
+<xsd:element name="lastDayToEnrol" type="⟦xsd:date⟧" />
+<xsd:element name="mark"           type="⟦xsd:integer⟧" />
+
+常用型別： xsd:string  xsd:integer  xsd:decimal
+          xsd:boolean xsd:date  xsd:dateTime  xsd:anyURI`, notes: [] },
+    { h: 'complexType：元素 + 屬性', code: `
+<scan schedule="hourly">
+  <start>2018-06-20T13:00:00</start>
+  <virusFound>true</virusFound>
+</scan>
+
+<xsd:element name="scan">
+  <xsd:complexType>
+    <xsd:sequence>
+      <xsd:element name="start"      type="xsd:dateTime" />
+      <xsd:element name="virusFound" type="xsd:boolean" />
+    </xsd:sequence>
+    <⟦xsd:attribute⟧ ⟦name⟧="⟨schedule⟩" ⟦type⟧="⟨xsd:string⟩" />
+  </xsd:complexType>
+</xsd:element>`, notes: ['⟦xsd:attribute⟧ 一定放⟦最後⟧（在 ⟦</xsd:sequence>⟧ 之後）'] },
+    { h: '只有文字 + 屬性', code: `
+<price promotionCode="FAMILYDEAL">39.50</price>
+
+<xsd:element name="price">
+  <xsd:complexType>
+    <⟦xsd:simpleContent⟧>
+      <⟦xsd:extension⟧ ⟦base⟧="⟨xsd:decimal⟩">
+        <xsd:attribute name="⟨promotionCode⟩" type="xsd:string" />
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+</xsd:element>`, notes: ['⟦base⟧ ＝ 文字內容的型別；有屬性所以仍是 complexType'] },
+    { h: 'Restriction（限制值）', code: `
+<!-- 列舉：只能 A B C D -->
+<xsd:element name="⟨grade⟩">
+  <⟦xsd:simpleType⟧>
+    <⟦xsd:restriction⟧ ⟦base⟧="⟨xsd:string⟩">
+      <⟦xsd:enumeration⟧ value="⟨A⟩"/>
+      <xsd:enumeration value="⟨B⟩"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:element>
+
+<!-- 範圍：0 ~ 100 -->
+<xsd:restriction base="⟨xsd:integer⟩">
+  <⟦xsd:minInclusive⟧ value="⟨0⟩"/>
+  <⟦xsd:maxInclusive⟧ value="⟨100⟩"/>
+</xsd:restriction>`, notes: ['有 restriction 時，element 上⟦不寫 type⟧，改包 simpleType'] },
+    { h: '重複出現 + 巢狀（studentList）', code: `
+<xsd:element name="studentList">
+  <xsd:complexType>
+    <xsd:sequence>
+      <xsd:element name="student"
+          ⟦minOccurs⟧="⟨0⟩" ⟦maxOccurs⟧="⟨unbounded⟩">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="firstName" type="xsd:string"/>
+            <xsd:element name="lastName"  type="xsd:string"/>
+          </xsd:sequence>
+          <xsd:attribute name="staffDbId" type="xsd:integer" />
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+    <xsd:attribute name="date" type="xsd:string" />
+  </xsd:complexType>
+</xsd:element>`, notes: [
+      '作法：從 ⟦root⟧ 開始，一層一層判斷 simple / complex',
+      '⟦minOccurs="0" maxOccurs="unbounded"⟧ ＝ DTD 的 ⟦*⟧',
+    ]},
+  ]
+},
+{
+  id: 'json', title: 'JSON', sub: 'Array / Object / stringify / parse', color: '#7fd67f',
+  sections: [
+    { h: 'Array vs Object', code: `
+var arrayName  = ⟦[⟧item0, item1, ...⟦]⟧;          var emptyArray  = [];
+var objectName = ⟦{⟧property1:value1, ...⟦}⟧;      var emptyObject = {};
+
+// Array：數字索引
+subjectList⟦[1]⟧ = "LOGIC101";
+for (var i = 0; i < subjectList⟦.length⟧; i++) {
+  alert(subjectList[i]);
+}
+
+// Object：名稱索引（兩種寫法）
+info⟦.⟧year           info⟦["year"]⟧`, notes: ['加入陣列：⟦arr.push(item)⟧'] },
+    { h: 'JSON 語法', code: `
+⟦{⟧
+  ⟦"fullname"⟧: "John Smith",        // name 要⟦雙引號⟧
+  "age": 20,
+  "csMajor": true,
+  "subjectList": ⟦[⟧                  // 方括號 = 陣列
+    ⟦{⟧ "code": "MATH101", "title": "Algebra" ⟦}⟧,
+    { "code": "CSIT122", "title": "C programming" }
+  ⟦]⟧
+⟦}⟧`, notes: [
+      '資料是 ⟦name/value⟧ 配對，用⟦逗號⟧分隔',
+      '⟦{ }⟧ 裝物件、⟦[ ]⟧ 裝陣列',
+    ]},
+    { h: '物件 ⇄ JSON 字串', code: `
+// JS 物件 → JSON 字串
+objJSON = ⟦JSON.stringify(⟧obj⟦)⟧;
+
+// JSON 字串 → JS 物件
+obj = ⟦JSON.parse(⟧objJSON⟦)⟧;
+
+var studentJSON = ⟦'⟧{"fullname":"John Smith","age":20}⟦'⟧;
+var studentObj  = JSON.parse(studentJSON);
+console.log("Full name is " + studentObj⟦.fullname⟧);
+
+var userList = JSON.parse(userListJSON);     // 陣列
+console.log("There are " + userList⟦.length⟧ + " users");`, notes: ['JS 裡的 JSON 字串用⟦單引號⟧包，裡面才能放雙引號'] },
+    { h: 'JSON.stringify 三個參數', code: `
+JSON.stringify(⟨jsvalue⟩, ⟨replacer⟩, ⟨space⟩)
+
+JSON.stringify(studentObj)
+  → 全部擠在一行
+
+JSON.stringify(studentObj, ⟦null⟧, ⟦2⟧)
+  → 全部屬性，縮排 2 格
+
+JSON.stringify(studentObj, ⟦["studentNumber", "csMajor"]⟧)
+  → 只輸出指定的屬性
+
+JSON.stringify(studentObj, ["studentNumber", "csMajor"], 2)`, notes: [
+      '⟦replacer⟧：挑選要輸出的屬性；null 或省略 = 全部',
+      '⟦space⟧：縮排空白數，方便閱讀',
+    ]},
+    { h: '組物件再轉 JSON', code: `
+var studentObj = ⟦{}⟧;                   // 空物件
+studentObj⟦.firstName⟧ = "John";
+studentObj.subjectList = ⟦[]⟧;           // 空陣列
+
+var subjectObj1 = {};
+subjectObj1.code  = "MATH101";
+subjectObj1.title = "Algebra";
+studentObj.subjectList⟦.push(⟧subjectObj1⟦)⟧;
+
+var studentJSON = JSON.stringify(studentObj, null, 2);
+console.log(studentJSON);`, notes: [] },
+  ]
+},
+{
+  id: 'xml', title: 'XML and DTD', sub: 'well-formed / DTD 宣告', color: '#5fd7ff',
+  sections: [
+    { h: 'XML 骨架', code: `
+⟦<?xml version="1.0" encoding="UTF-8" ?>⟧
+<⟨studentList⟩>                          <!-- 唯一 root -->
+  <student ⟨gender⟩=⟦"⟧M⟦"⟧>               <!-- 屬性值要引號 -->
+    <firstName>John</firstName>
+    <email>jsmith@gmail.com</email>
+  </student>
+  <emptyElement ⟦/>⟧                    <!-- 空元素自閉合 -->
+</⟨studentList⟩>
+
+<?xml version="⟨1.0⟩" encoding="⟨UTF-8⟩" standalone="⟨yes|no⟩" ?>`, notes: [
+      'XML 宣告必須在⟦第一行第一個位置⟧，前面不能有空行',
+      '⟦一個 root⟧、⟦都要有結束標籤⟧、⟦大小寫有別⟧、⟦正確巢狀⟧、⟦屬性值加引號⟧（單雙皆可）',
+      'XML 標籤是⟦使用者自訂⟧；HTML 標籤是預先定義的',
+    ]},
+    { h: 'Entity / 註解 / 屬性 vs 元素', code: `
+⟦&amp;lt;⟧   <        ⟦&amp;gt;⟧   >        ⟦&amp;amp;⟧  &
+⟦&amp;apos;⟧ '        ⟦&amp;quot;⟧ "
+
+⟦<!--⟧ this is a comment ⟦-->⟧
+
+<!-- metadata（關於資料的資料）→ 屬性；資料本身 → 元素 -->
+<person ⟨staffDbId⟩="103" ⟨operation⟩="update">
+  <firstName>John</firstName>
+</person>`, notes: ['任何屬性都能改寫成子元素；⟦資料本身用元素較好⟧'] },
+    { h: 'Internal DTD', code: `
+<?xml version="1.0" ⟦standalone="yes"⟧ ?>
+⟦<!DOCTYPE⟧ ⟨student⟩ ⟦[⟧
+  ⟦<!ELEMENT⟧ student ⟨(firstName,lastName,email)⟩>
+  <!ELEMENT firstName ⟦(#PCDATA)⟧>
+  <!ELEMENT lastName  (#PCDATA)>
+  <!ELEMENT email     (#PCDATA)>
+⟦]>⟧
+<student>
+  <firstName>John</firstName>
+  <lastName>Smith</lastName>
+  <email>jsmith@gmail.com</email>
+</student>`, notes: [
+      '⟦<!DOCTYPE⟧ 後面的名字 ＝ root 元素',
+      '⟦#PCDATA⟧ ＝ parsed character data（文字）',
+    ]},
+    { h: 'External DTD', code: `
+<?xml version="1.0" ⟦standalone="no"⟧ ?>
+<!DOCTYPE ⟨student⟩ ⟦SYSTEM⟧ "⟨student.dtd⟩">
+<student> ... </student>
+
+<!-- student.dtd 的內容：只有宣告 -->
+<!ELEMENT student (firstName,lastName,email)>
+<!ELEMENT firstName (#PCDATA)>
+<!ELEMENT lastName (#PCDATA)>
+<!ELEMENT email (#PCDATA)>`, notes: ['外部 DTD → ⟦standalone="no"⟧；內部 DTD → ⟦"yes"⟧'] },
+    { h: 'ELEMENT 宣告', code: `
+⟦<!ELEMENT⟧ ⟨elementName⟩ ⟨(content)⟩⟦>⟧
+
+(child1⟦,⟧child2⟦,⟧child3)   依⟦這個順序⟧全部出現
+(child⟦+⟧)                 1 次以上
+(child⟦*⟧)                 0 次以上
+(child⟦?⟧)                 0 或 1 次
+(child1⟦|⟧child2)          擇一
+(⟦#PCDATA⟧)                文字
+
+<!ELEMENT studentList (student⟦*⟧)>`, notes: [] },
+    { h: 'ATTLIST 宣告', code: `
+⟦<!ATTLIST⟧ ⟨elementName⟩ ⟨attributeName⟩ ⟨attributeType⟩ ⟨attributeValue⟩>
+
+... CDATA ⟦"default-value"⟧>        有預設值
+... CDATA ⟦#FIXED⟧ "value">         固定值
+... CDATA ⟦#REQUIRED⟧>              必填
+... CDATA ⟦#IMPLIED⟧>               可省略（以上皆非時）
+
+<!ELEMENT dailyTransaction (person*)>
+<!ATTLIST dailyTransaction date ⟦CDATA⟧ #REQUIRED>
+<!ELEMENT person (firstName,lastName,mobile)>
+<!ATTLIST person staffDbId CDATA #REQUIRED>
+<!ATTLIST person operation CDATA #REQUIRED>`, notes: ['元素文字用 ⟦(#PCDATA)⟧；屬性型別用 ⟦CDATA⟧'] },
+  ]
+},
+{
+  id: 'ajax', title: 'AJAX', sub: 'XMLHttpRequest + JSON 四步驟', color: '#ff9e64',
+  sections: [
+    { h: '四步驟', code: `
+Step 1  ⟦Make the query⟧            發出請求
+Step 2  ⟦Get the response JSON⟧     xhttp.responseText
+Step 3  ⟦Parse⟧ JSON → JS 物件      JSON.parse()
+Step 4  ⟦Display⟧ 物件到 HTML       innerHTML
+
+<button ⟦onClick⟧="makeAjaxQuery()">Get JSON</button>
+<div ⟦id⟧="display"></div>`, notes: [
+      'AJAX = ⟦asynchronous⟧ JavaScript and XML（不一定用 XML，也可用 JSON）',
+      '可以⟦不重新載入頁面⟧就更新網頁、在背景收送資料',
+    ]},
+    { h: 'Step 1：發出請求', code: `
+function makeAjaxQuery() {
+  // create an XMLHttpRequest
+  var xhttp = ⟦new XMLHttpRequest()⟧;
+
+  // create a handler for the readyState change
+  xhttp.⟦onreadystatechange⟧ = ⟦function() {⟧
+    readyStateChangeHandler(xhttp);
+  ⟦};⟧
+
+  // making query by async call
+  xhttp.⟦open(⟧"⟨GET⟩", "⟨weather.json⟩", ⟨true⟩⟦)⟧;
+  xhttp.⟦send()⟧;
+}`, notes: ['⟦open⟧ 第三個參數 ⟨true⟩ ＝ 非同步 (async)'] },
+    { h: 'Callback：判斷成功 / 失敗', code: `
+function readyStateChangeHandler(xhttp) {
+  if (xhttp.⟦readyState == 4⟧) {        // 4 = DONE
+    if (xhttp.⟦status == 200⟧) {        // 200 = OK
+      handleStatusSuccess(xhttp);
+    } else {
+      handleStatusFailure(xhttp);
+    }
+  }
+}
+
+function handleStatusFailure(xhttp) {
+  var displayDiv = document.getElementById("display");
+  displayDiv.innerHTML =
+      "XMLHttpRequest failed: status " + xhttp⟦.status⟧;
+}`, notes: [] },
+    { h: 'Step 2–4：成功時', code: `
+function handleStatusSuccess(xhttp) {
+  var jsonText = xhttp.⟦responseText⟧;        // Step 2
+  var obj = ⟦JSON.parse(⟧jsonText⟦)⟧;           // Step 3
+  display(obj);                             // Step 4
+}
+
+function display(weatherObj) {
+  var displayDiv = document.getElementById("display");
+  var html = "<h1>" + weatherObj⟦.queryLocation⟧ + "</h1>";
+  html = html + weatherObj⟦.temperature.degree⟧;   // 巢狀物件
+  html = html + "<br />";
+  displayDiv.⟦innerHTML⟧ = html;
+}`, notes: ['主要工作就是寫 ⟦display⟧ 函式：把物件組成 HTML 字串'] },
+    { h: 'display：陣列 → 表格', code: `
+var html = "<h2>Stock " + marketObj.queryTime + "</h2>";
+html ⟦+=⟧ "⟦<table border='1'>⟧";
+html += "<tr><th>Stock</th><th>Value</th></tr>";
+
+⟦for (var i = 0; i < marketObj.stockList.length; i++)⟧ {
+  var stockObj = marketObj.stockList⟦[i]⟧;
+  html += "⟦<tr>⟧";
+  html += "<td>" + stockObj.name + "</td>";
+  if (stockObj.change ⟦< 0⟧) {
+    html += "<td style=⟦'⟧color:red⟦'⟧>" + stockObj.change + "</td>";
+  } else {
+    html += "<td style='color:green'>" + stockObj.change + "</td>";
+  }
+  html += "⟦</tr>⟧";
+}
+html += "⟦</table>⟧";
+displayDiv.innerHTML = html;`, notes: ['字串用雙引號包，裡面的 HTML 屬性用⟦單引號⟧'] },
+  ]
+},
+{
+  id: 'canvas', title: 'Canvas', sub: '文字 / 路徑 / stroke / fill', color: '#f78fb3',
+  sections: [
+    { h: '起手式', code: `
+<⟦canvas⟧ ⟦id⟧="⟨canvas⟩" ⟦width⟧="700" ⟦height⟧="500"
+        style="border:1px solid black;">
+  Your browser does not support canvas.
+</canvas>
+<button onClick="draw()">Start</button>
+
+// get the canvas's 2d context
+var canvas  = document.getElementById("⟨canvas⟩");
+var context = canvas.⟦getContext("2d")⟧;`, notes: [
+      '<canvas> 只是⟦容器⟧，一定要用 JavaScript 才能畫',
+      '原點 ⟦(0,0) 在左上角⟧，x 向右、y 向下',
+    ]},
+    { h: '文字', code: `
+// fillText：實心字
+context.⟦font⟧ = "⟨italic small-caps bold 50px Arial⟩";
+context.⟦fillText(⟧"Hello World", ⟨200, 100⟩⟦)⟧;
+
+// strokeText：空心字（只有外框）
+context.font = "oblique 100px Courier New";
+context.⟦strokeText(⟧"Hello World", ⟨250, 300⟩⟦)⟧;`, notes: ['先設 ⟦font⟧ 再畫；後兩個參數是 x, y'] },
+    { h: '清除畫布', code: `
+function clearCanvas() {
+  var canvas  = document.getElementById("canvas");
+  var context = canvas.getContext("2d");
+  context.⟦clearRect(⟧0, 0, canvas⟦.width⟧, canvas⟦.height⟧⟦)⟧;
+}`, notes: [] },
+    { h: 'Stroke：沿路徑描線', code: `
+// specify the path
+context.⟦beginPath()⟧;
+context.⟦moveTo(⟧⟨50, 10⟩⟦)⟧;        // 起點
+context.⟦lineTo(⟧⟨50, 400⟩⟦)⟧;
+context.⟦lineTo(⟧⟨250, 400⟩⟦)⟧;
+context.⟦closePath()⟧;            // 接回起點（封閉）
+
+// make the stroke along the path
+context.⟦strokeStyle⟧ = "blue";
+context.⟦lineWidth⟧ = "4";
+context.⟦stroke()⟧;`, notes: ['沒有 ⟦closePath()⟧ → 開口的折線；有 → 封閉圖形'] },
+    { h: 'Fill：填滿路徑圍住的區域', code: `
+context.beginPath();
+context.moveTo(50, 10);
+context.lineTo(50, 400);
+context.lineTo(250, 400);
+context.closePath();
+
+// make the fill of the region enclosed by the path
+context.⟦fillStyle⟧ = "⟨#F5FFFA⟩";
+context.⟦fill()⟧;
+
+context.strokeStyle = "blue";      // 可同時填滿 + 描邊
+context.lineWidth = "2";
+context.stroke();`, notes: [
+      '順序：⟦beginPath → moveTo → lineTo… → closePath → 設 style → fill / stroke⟧',
+      '挖洞（字母 O）：先填外圈黑色，再用白色填內圈',
+    ]},
+    { h: '補充（講義未列）', code: `
+context.fillRect(x, y, w, h);      context.strokeRect(x, y, w, h);
+context.arc(x, y, r, 0, 2 * Math.PI);        // 圓
+context.drawImage(img, x, y);`, notes: [] },
+  ]
+},
+{
+  id: 'dnd', title: 'Drag and Drop', sub: 'draggable / droppable', color: '#56d4c0',
   sections: [
     { h: 'HTML 骨架', code: `
-<!-- 被拖的東西 -->
-<img ⟦id⟧="⟨drag1⟩" src="a.png"
-     ⟦draggable="true"⟧
-     ⟦ondragstart⟧="⟨drag(event)⟩">
+<!-- Draggable：可以被拖的元素 -->
+<span ⟦id⟧="⟨hello⟩" ⟦draggable="true"⟧
+      ⟦onDragStart⟧="⟨dragStart(event)⟩">hello</span>
 
-<!-- 放置區 -->
-<div id="box"
-     ⟦ondragover⟧="⟨allowDrop(event)⟩"
-     ⟦ondrop⟧="⟨drop(event)⟩"></div>`, notes: [
-      '被拖元素：⟦draggable⟧ + ⟦ondragstart⟧，而且要有 ⟦id⟧',
-      '放置區：⟦ondragover⟧ + ⟦ondrop⟧',
+<!-- Droppable：可以被放上去的元素 -->
+<span ⟦id⟧="⟨world⟩" ⟦onDrop⟧="⟨drop(event)⟩"
+      ⟦onDragOver⟧="⟨dragOver(event)⟩">world</span>
+
+<span id="message"></span>`, notes: [
+      'Draggable：⟦draggable="true"⟧ ＋ ⟦onDragStart⟧',
+      'Droppable：⟦onDrop⟧ ＋ ⟦onDragOver⟧',
+      '兩邊都要有 ⟦id⟧，函式都要傳 ⟦event⟧',
     ]},
-    { h: '三個函式', code: `
-function drag(ev) {                    // 記住被拖的是誰
-  ev.⟦dataTransfer.setData⟧("⟨text⟩", ev.⟦target.id⟧);
-}
+    { h: 'dragStart：記住拖的是誰', code: `
+function dragStart(⟦event⟧) {
+  // get the dragged element ID
+  var dragId = ⟦event.target.id⟧;
 
-function allowDrop(ev) {               // 允許放下
-  ev.⟦preventDefault()⟧;
-}
+  // store the dragged element ID into the dataTransfer object
+  ⟦event.dataTransfer.setData(⟧"⟨dragId⟩", dragId⟦)⟧;
+}`, notes: ['⟦DataTransfer⟧ 物件：在拖放過程中保存被拖的資料'] },
+    { h: 'dragOver：允許放下', code: `
+function dragOver(event) {
+  ⟦event.preventDefault()⟧;
+}`, notes: ['在 dragOver 呼叫 ⟦preventDefault()⟧ ＝ 表示這個位置允許 drop'] },
+    { h: 'drop：取回資料並處理', code: `
+function drop(event) {
+  // get the drop element ID
+  var dropId = ⟦event.target.id⟧;
 
-function drop(ev) {
-  ev.⟦preventDefault()⟧;
-  var id = ev.⟦dataTransfer.getData⟧("⟨text⟩");
-  ev.target.⟦appendChild⟧(document.getElementById(id));
+  // retrieve the dragged element ID from the dataTransfer object
+  var dragId = ⟦event.dataTransfer.getData(⟧"⟨dragId⟩"⟦)⟧;
+
+  // do the dropping logic
+  var messageSpan = document.getElementById("message");
+  messageSpan.innerHTML = dragId + " " + dropId;
 }`, notes: [
-      '⟦ondragover⟧ 一定要 ⟦preventDefault()⟧：元素預設不接受放置',
-      '⟦setData⟧ 與 ⟦getData⟧ 的格式字串要一致',
+      '⟦setData⟧ 與 ⟦getData⟧ 的 key（⟨"dragId"⟩）要一樣',
+      'dragStart 的 target ＝ 被拖的；drop 的 target ＝ 被放上去的',
     ]},
-    { h: '事件順序', code: `
-被拖元素： ⟦dragstart⟧ → drag → ⟦dragend⟧
-放置區　： dragenter → ⟦dragover⟧ → dragleave / ⟦drop⟧`, notes: [] },
   ]
 },
 {
-  id: 'dom', title: 'DOM', sub: '找 / 改 / 增刪 / 事件', color: '#82aaff',
+  id: 'dom', title: 'DOM', sub: '選取 / 建立 / 刪改 / 屬性', color: '#82aaff',
   sections: [
-    { h: '找元素', code: `
-document.⟦getElementById⟧("⟨id⟩")            // 單一元素
-document.⟦getElementsByTagName⟧("⟨p⟩")       // 集合 → 要 [i]
-document.⟦getElementsByClassName⟧("⟨cls⟩")   // 集合
-document.⟦querySelector⟧("⟨#id .cls⟩")       // 第一個符合
-document.⟦querySelectorAll⟧("⟨p.cls⟩")       // 全部符合`, notes: ['get⟦Elements⟧… 有 s → 回傳集合，要用 ⟦[0]⟧ 取出'] },
-    { h: '改內容 / 屬性 / 樣式', code: `
-el.⟦innerHTML⟧ = "⟨<b>new</b>⟩";       // 內容（含標籤）
-el.⟦textContent⟧ = "純文字";
-el.⟦value⟧                            // 表單欄位的值
+    { h: 'DOM 是什麼', code: `
+Document
+└─ <html>
+   ├─ <head> ── <title> ── Text: "My website"
+   └─ <body>
+      ├─ <h1> ── Text: "Hello World"
+      └─ <p>  ── Text: "Wollongong"`, notes: [
+      'DOM 把網頁結構表示成記憶體中的一棵⟦樹⟧',
+      '可用 JavaScript 透過 DOM 改網頁的⟦結構、樣式、內容⟧',
+      '⟦document⟧ 物件代表整個網頁；⟦文字也是節點⟧ (Text node)',
+    ]},
+    { h: '選取元素', code: `
+document.⟦getElementById(⟧⟨id⟩⟦)⟧                // 一個元素
+document.⟦getElementsByTagName(⟧⟨tagName⟩⟦)⟧     // 多個
+document.⟦getElementsByClassName(⟧⟨className⟩⟦)⟧ // 多個`, notes: ['get⟦Elements⟧…（有 s）回傳集合，要用 ⟦[i]⟧ 取出'] },
+    { h: '建立元素三步驟', code: `
+// 1 建立元素
+var li = document.⟦createElement(⟧"⟨li⟩"⟦)⟧;
 
-el.⟦src⟧ = "a.png";                   // 直接改屬性
-el.⟦setAttribute⟧("⟨href⟩", "⟨a.html⟩");
-el.⟦getAttribute⟧("href");
+// 2 建立文字節點，放進元素
+var personText = document.⟦createTextNode(⟧⟨personInfo⟩⟦)⟧;
+li.⟦appendChild(⟧personText⟦)⟧;
 
-el.⟦style⟧.⟨color⟩ = "red";
-el.style.⟦backgroundColor⟧ = "yellow";   // CSS 的 - 改駝峰
-el.⟦className⟧ = "active";   el.⟦classList.add⟧("active");`, notes: [] },
-    { h: '新增 / 刪除節點', code: `
-var p = document.⟦createElement⟧("⟨p⟩");
-var t = document.⟦createTextNode⟧("⟨Hello⟩");
-p.⟦appendChild⟧(t);
-parent.⟦appendChild⟧(p);              // 加在最後
-parent.⟦insertBefore⟧(p, ⟨child⟩);      // 插在 child 前
+// 3 把元素加到頁面上既有的元素
+var personUL = document.getElementById("personList");
+personUL.⟦appendChild(⟧li⟦)⟧;
 
-parent.⟦removeChild⟧(child);
-parent.⟦replaceChild⟧(⟨新⟩, ⟨舊⟩);`, notes: ['三步驟：⟦create⟧ → 填內容 → ⟦append⟧ 到父節點'] },
-    { h: '事件', code: `
-<button ⟦onclick⟧="⟨myFunc()⟩">Click</button>
+<ul id="personList"></ul>`, notes: [
+      '⟦createElement → createTextNode → appendChild → appendChild⟧',
+      '插在某個子節點前：⟦element.insertBefore(⟧新節點, 既有子節點⟦)⟧',
+    ]},
+    { h: '刪除 / 取代 / 屬性', code: `
+⟨parent⟩.⟦removeChild(⟧⟨element⟩⟦)⟧;
+⟨parent⟩.⟦replaceChild(⟧⟨new⟩, ⟨old⟩⟦)⟧;         // 順序：新, 舊
 
-el.⟦onclick⟧ = function () { … };
-el.⟦addEventListener⟧("⟨click⟩", ⟨myFunc⟩);    // 沒有 on、沒有 ()
-el.removeEventListener("click", myFunc);
+element.⟦getAttribute(⟧⟨attrName⟩⟦)⟧;
+element.⟦setAttribute(⟧⟨attrName⟩, ⟨attrValue⟩⟦)⟧;`, notes: ['講義寫作 ⟦document.removeChild(element)⟧；實際是由父節點呼叫'] },
+    { h: '範例：依輸入動態加元素', code: `
+function addElement() {
+  // get tag name and text from user
+  var tag  = document.getElementById("tagInput")⟦.value⟧;
+  var text = document.getElementById("textInput")⟦.value⟧;
 
-常用：onclick  onload  onchange  onmouseover  onmouseout
-      onkeydown  onfocus  onblur  onsubmit`, notes: [] },
-    { h: '節點關係', code: `
-el.⟦parentNode⟧
-el.⟦childNodes⟧        // 含文字節點     el.⟦children⟧  // 只有元素
-el.⟦firstChild⟧   el.⟦lastChild⟧
-el.⟦nextSibling⟧  el.⟦previousSibling⟧
+  // create a new element holding the text
+  var element  = document.createElement(⟨tag⟩);
+  var textNode = document.createTextNode(⟨text⟩);
+  element.appendChild(textNode);
 
-node.⟦nodeName⟧   node.⟦nodeValue⟧   node.⟦nodeType⟧  // 1 元素  3 文字
+  // add the new element to the div
+  var holderDiv = document.getElementById("elementHolder");
+  holderDiv.appendChild(element);
+}`, notes: [] },
+    { h: '改內容三步驟（複習）', code: `
+// 1 給元素 id   2 取得元素   3 改內容
+var e = document.getElementById("⟨the-id⟩");
 
-// 取元素內文字
-el.⟦childNodes[0].nodeValue⟧   ≈   el.innerHTML`, notes: ['文字本身也是一個節點（text node）'] },
+e.⟦innerHTML⟧ = "the-new-content";   // span, div …
+e.⟦value⟧     = "the-new-value";     // input
+e.⟦src⟧       = "the-new-image-src"; // img
+e.⟦style⟧.color = "pink";            // 樣式`, notes: [] },
   ]
 },
 {
-  id: 'css', title: 'CSS Selectors', sub: '選擇器', color: '#ffd84d',
+  id: 'css', title: 'CSS Selectors', sub: 'simple / class / id / contextual', color: '#ffd84d',
   sections: [
-    { h: '基本', code: `
-⟦*⟧            全部
-⟦p⟧            元素
-⟦.⟧⟨cls⟩         class="cls"
-⟦#⟧⟨id⟩          id="id"
-p⟦.⟧cls        有 cls 的 <p>（中間⟦沒有空白⟧）
-h1⟦,⟧ p        h1 和 p（群組）`, notes: [] },
-    { h: '組合 (Combinators)', code: `
-div⟦ ⟧p        div 裡⟦所有⟧後代 p     （空白）
-div ⟦>⟧ p      div 的⟦直接子⟧元素 p
-div ⟦+⟧ p      ⟦緊接在⟧ div 後的那個 p
-div ⟦~⟧ p      div 後面⟦所有同層⟧的 p`, notes: [] },
-    { h: '屬性', code: `
-⟦[⟧target⟦]⟧               有 target 屬性
-[type⟦=⟧"text"]          等於
-[title⟦~=⟧"flower"]      含這個「單字」
-[href⟦^=⟧"https"]        開頭是
-[href⟦$=⟧".pdf"]         結尾是
-[href⟦*=⟧"w3"]           包含`, notes: [] },
-    { h: '偽類 (:)', code: `
-a⟦:link⟧  a⟦:visited⟧  a⟦:hover⟧  a⟦:active⟧      /* 順序 LVHA */
-input⟦:focus⟧   input⟦:checked⟧   input⟦:disabled⟧
+    { h: 'Simple selector', code: `
+⟦p⟧ {
+  border: 1px solid black;
+  padding: 10px;
+}
 
-p⟦:first-child⟧     p⟦:last-child⟧
-p⟦:nth-child(⟧⟨2⟩⟦)⟧    ⟨odd⟩ / ⟨even⟩ / ⟨3n+1⟩
-p⟦:first-of-type⟧   p⟦:nth-of-type(⟧2⟦)⟧
-⟦:not(⟧p⟦)⟧`, notes: ['⟦:nth-child⟧ 算所有兄弟；⟦:nth-of-type⟧ 只算同標籤'] },
-    { h: '偽元素 (::)', code: `
-p⟦::first-line⟧      p⟦::first-letter⟧
-p⟦::before⟧ { ⟦content⟧: "★"; }
-p⟦::after⟧  { ⟦content⟧: "";  }
-⟦::selection⟧`, notes: ['⟦::before / ::after⟧ 一定要有 ⟦content⟧'] },
-    { h: '優先權 (Specificity)', code: `
-⟦!important⟧  >  ⟦inline style⟧  >  ⟦#id⟧  >  ⟦.class⟧  >  ⟦元素⟧
-                  1000          100      10         1
+⟦h1, h2⟧ {                 /* 逗號：h1 和 h2 都套用 */
+  color: lightgrey;
+}`, notes: [] },
+    { h: 'Class selector', code: `
+<p ⟦class⟧="⟨userInfo⟩">…</p>
+<h1 class="⟨eticket⟩">…</h1>
 
-#nav .item a   →  100 + 10 + 1 = ⟨111⟩
-.class、[attr]、:hover  都算 ⟨10⟩
-分數相同 → ⟦後寫的⟧贏`, notes: [] },
+p⟦.⟧userInfo { … }             /* class 是 userInfo 的 <p> */
+h1⟦.⟧userInfo, h2⟦.⟧userInfo { … }
+⟦.⟧eticket { color: green; }   /* 所有 class 是 eticket 的元素 */`, notes: ['⟦p.userInfo⟧ 中間⟦沒有空白⟧；有空白就變成後代選擇器'] },
+    { h: 'Id selector', code: `
+<h1 ⟦id⟧="⟨userHeading⟩">…</h1>
+
+⟦#⟧userHeading {
+  color: blue;
+}`, notes: ['每個元素的 id 應該是⟦唯一⟧的'] },
+    { h: 'Contextual selector', code: `
+⟦E F⟧   { … }      /* E 的每個⟦後代⟧ (descendant) F */
+⟦E > F⟧ { … }      /* E 的每個⟦子元素⟧ (child) F     */
+
+div i               { color: red; }
+div ⟦>⟧ i             { color: red; }
+div⟦.⟧userInfo i      { … }
+div.bankInfo ⟦>⟧ i    { … }`, notes: [
+      '⟦Descendant⟧：出現在 E 內容裡的任何一層',
+      '⟦Child⟧：⟦直接⟧巢狀在 E 裡（child 一定也是 descendant）',
+    ]},
+    { h: '判斷 descendant / child', code: `
+<div>
+  Some text <i>italic</i> here.          ← child ✔  descendant ✔
+  <p>
+    Hi there <i>italic again</i>         ← child ✘  descendant ✔
+  </p>
+</div>
+
+⟦div i⟧     → 兩個 <i> 都套用
+⟦div > i⟧   → 只有第一個 <i>`, notes: [] },
+    { h: 'Pseudo class selector', code: `
+a⟦:link⟧    { … }      /* 還沒點過的連結 */
+a⟦:visited⟧ { … }      /* 已經點過的連結 */
+h1⟦:hover⟧  { … }      /* 滑鼠移到上面時 */
+
+/* 表單驗證 / transition 用到的 */
+input⟦:invalid⟧   input⟦:valid⟧   input⟦:focus⟧
+⟦:required⟧   ⟦:optional⟧   ⟦:disabled⟧   ⟦:active⟧`, notes: [] },
+    { h: '補充（講義未列）', code: `
+E + F   緊接在 E 後的 F        E ~ F   E 之後同層的 F
+[type="text"]   屬性選擇器     p:first-child   p:nth-child(2)
+優先權： inline style > #id > .class > 元素`, notes: [] },
   ]
 },
 ];
@@ -661,7 +914,7 @@ function mark(s) {
 }
 function renderCode(src) {
   let s = esc(src.replace(/^\n/, ''));
-  s = s.replace(/&lt;!--(?! |$)|&lt;!--[\s\S]*?--&gt;/g, m => m.endsWith('--&gt;') ? '<span class="c">' + m + '</span>' : m)
+  s = s.replace(/&lt;!--[\s\S]*?--&gt;/g, m => '<span class="c">' + m + '</span>')
        .replace(/\/\*[\s\S]*?\*\//g, m => '<span class="c">' + m + '</span>')
        .replace(/(^|\s)(\/\/.*)$/gm, (m, a, b) => a + '<span class="c">' + b + '</span>');
   return mark(s);
